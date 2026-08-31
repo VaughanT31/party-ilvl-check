@@ -63,6 +63,24 @@ function ILvlCheck:CreateRow(parent, index)
     for iconIndex = 1, MAX_BUFF_ICONS do
         local holder = CreateFrame("Frame", nil, row)
         holder:SetSize(BUFF_ICON_SIZE + BUFF_RING_PADDING, BUFF_ICON_SIZE + BUFF_RING_PADDING)
+        holder:EnableMouse(true)
+        holder:SetScript("OnEnter", function(self)
+            if not self.buffDef then
+                return
+            end
+
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(self.buffDef.label)
+            if self.hasBuff then
+                GameTooltip:AddLine("Active", 0.30, 0.85, 0.35)
+            else
+                GameTooltip:AddLine("Missing", 0.90, 0.20, 0.20)
+            end
+            GameTooltip:Show()
+        end)
+        holder:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
         holder:Hide()
         if previousIcon then
             holder:SetPoint("LEFT", previousIcon, "RIGHT", BUFF_ICON_GAP, 0)
@@ -390,8 +408,11 @@ function ILvlCheck:UpdateUI()
                         else
                             holder.ring:SetVertexColor(0.90, 0.20, 0.20, 1)
                         end
+                        holder.buffDef = buffDef
+                        holder.hasBuff = hasBuff
                         holder:Show()
                     else
+                        holder.buffDef = nil
                         holder:Hide()
                     end
                 end
@@ -427,11 +448,7 @@ function ILvlCheck:UpdateUI()
     self:UpdateSummary()
 end
 
-function ILvlCheck:UpdateSummary()
-    if not self.frame or not self.frame.summaryTiles then
-        return
-    end
-
+function ILvlCheck:GetReadinessCounts()
     local minimum = GetMinimumItemLevel()
     local ready, below, offline = 0, 0, 0
 
@@ -449,6 +466,16 @@ function ILvlCheck:UpdateSummary()
             end
         end
     end
+
+    return ready, below, offline, minimum
+end
+
+function ILvlCheck:UpdateSummary()
+    if not self.frame or not self.frame.summaryTiles then
+        return
+    end
+
+    local ready, below, offline, minimum = self:GetReadinessCounts()
 
     local tiles = self.frame.summaryTiles
     tiles[1].count:SetText(tostring(ready))

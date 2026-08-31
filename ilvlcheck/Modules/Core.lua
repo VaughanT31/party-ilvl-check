@@ -58,6 +58,9 @@ ns.BUFF_DEFINITIONS = {
       spellIds = { 462854 }, icon = "achievement_raidprimalist_windelemental" },
     { key = "FOOD", label = "Well Fed", kind = "consumable", icon = "spell_misc_food",
       names = {
+          -- Hearty is the reduced buff members get from a dropped feast they
+          -- didn't personally cook/buy -- counts as "fed" for this tracker.
+          "Hearty",
           -- Feasts
           "Silvermoon Parade", "Harandar Celebration", "Quel'dorei Medley", "Blooming Feast",
           -- Single-stat / primary-stat food

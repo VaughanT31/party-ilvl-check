@@ -99,6 +99,22 @@ function ILvlCheck:CreateMinimapButton()
     button:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:SetText("Party iLvl Check")
+
+        if #ILvlCheck.displayOrder == 0 and not ILvlCheck.testMode then
+            ILvlCheck:RefreshPartyScan()
+        end
+
+        if #ILvlCheck.displayOrder > 0 then
+            local ready, below, offline, minimum = ILvlCheck:GetReadinessCounts()
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddDoubleLine("Ready", tostring(ready), 1, 1, 1, 0.35, 0.85, 0.45)
+            if minimum then
+                GameTooltip:AddDoubleLine("Below " .. minimum, tostring(below), 1, 1, 1, 1.00, 0.55, 0.20)
+            end
+            GameTooltip:AddDoubleLine("Offline", tostring(offline), 1, 1, 1, 0.62, 0.62, 0.66)
+        end
+
+        GameTooltip:AddLine(" ")
         GameTooltip:AddLine("Left-click to toggle the window", 0.9, 0.9, 0.9)
         GameTooltip:AddLine("Drag to move", 0.6, 0.6, 0.6)
         GameTooltip:Show()
