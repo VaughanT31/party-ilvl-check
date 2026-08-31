@@ -1,0 +1,14 @@
+## Interface: 120100
+## Title: Party iLvl Check
+## Notes: Displays party item levels when entering 5-player instances, staying hidden during active Mythic+ timers.
+## Author: CtrlShiftZed
+## Version: 1.2.0
+## IconTexture: Interface\AddOns\ilvlcheck\icon
+## SavedVariables: ILvlCheckDB
+Modules\Core.lua
+Modules\Scan.lua
+Modules\Buffs.lua
+Modules\TestMode.lua
+Modules\UI.lua
+Modules\Minimap.lua
+Modules\Events.lua
