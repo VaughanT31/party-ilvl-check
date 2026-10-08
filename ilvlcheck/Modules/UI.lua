@@ -26,6 +26,25 @@ function ILvlCheck:GetStatusColor(status)
     return 0.85, 0.85, 0.85
 end
 
+function ILvlCheck:AddGearTooltipLines(audit)
+    if not audit then
+        GameTooltip:AddLine("Not checked yet", 0.62, 0.62, 0.66)
+        return
+    end
+
+    if #audit.missingEnchants == 0 and #audit.emptySockets == 0 then
+        GameTooltip:AddLine("All enchanted and gemmed", 0.30, 0.85, 0.35)
+        return
+    end
+
+    if #audit.missingEnchants > 0 then
+        GameTooltip:AddLine("Missing enchant: " .. table.concat(audit.missingEnchants, ", "), 0.90, 0.20, 0.20, true)
+    end
+    if #audit.emptySockets > 0 then
+        GameTooltip:AddLine("Empty socket: " .. table.concat(audit.emptySockets, ", "), 1.00, 0.55, 0.20, true)
+    end
+end
+
 function ILvlCheck:CreateRow(parent, index)
     local row = CreateFrame("Frame", nil, parent)
     row:SetSize(ROW_WIDTH, ROW_HEIGHT)
@@ -71,7 +90,9 @@ function ILvlCheck:CreateRow(parent, index)
 
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText(self.buffDef.label)
-            if self.hasBuff then
+            if self.buffDef.kind == "gear" then
+                ILvlCheck:AddGearTooltipLines(self.gearAudit)
+            elseif self.hasBuff then
                 GameTooltip:AddLine("Active", 0.30, 0.85, 0.35)
             else
                 GameTooltip:AddLine("Missing", 0.90, 0.20, 0.20)
@@ -118,7 +139,7 @@ function ILvlCheck:CreateRow(parent, index)
     row.deltaText:SetJustifyH("RIGHT")
 
     row.statusBG = row:CreateTexture(nil, "ARTWORK")
-    row.statusBG:SetSize(72, 20)
+    row.statusBG:SetSize(84, 20)
     row.statusBG:SetPoint("RIGHT", -12, 0)
     row.statusBG:SetColorTexture(1, 1, 1, 1)
     row.statusBG:SetVertexColor(0.22, 0.22, 0.25, 0.85)
@@ -184,7 +205,7 @@ function ILvlCheck:CreateUI()
     end
 
     local frame = CreateFrame("Frame", "ILvlCheckMainFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(460, 500)
+    frame:SetSize(ROW_WIDTH + 36, 500)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("MEDIUM")
     frame:SetMovable(true)
@@ -218,7 +239,7 @@ function ILvlCheck:CreateUI()
 
     local divider = frame:CreateTexture(nil, "ARTWORK")
     divider:SetColorTexture(1, 1, 1, 0.10)
-    divider:SetSize(424, 1)
+    divider:SetSize(ROW_WIDTH, 1)
     divider:SetPoint("TOP", 0, -40)
 
     local summaryTiles = {}
@@ -399,17 +420,27 @@ function ILvlCheck:UpdateUI()
                 for iconIndex = 1, MAX_BUFF_ICONS do
                     local buffDef = visibleBuffs[iconIndex]
                     local holder = row.buffIcons[iconIndex]
-                    if buffDef then
-                        local hasBuff = entry.buffStatus and entry.buffStatus[buffDef.key] == true
+                    -- Self-only checks (weapon oil) leave a blank slot on other
+                    -- rows so the icon columns still line up.
+                    local isSelf = entry.unit and UnitIsUnit(entry.unit, "player")
+                    if buffDef and buffDef.selfOnly and not isSelf and not self.testMode then
+                        holder.buffDef = nil
+                        holder:Hide()
+                    elseif buffDef then
+                        local status = entry.buffStatus and entry.buffStatus[buffDef.key]
+                        local hasBuff = status == true
                         holder.icon:SetTexture(buffDef.iconPath)
                         holder.icon:SetDesaturated(not hasBuff)
-                        if hasBuff then
+                        if status == nil and buffDef.kind == "gear" then
+                            holder.ring:SetVertexColor(0.45, 0.45, 0.50, 1)
+                        elseif hasBuff then
                             holder.ring:SetVertexColor(0.30, 0.85, 0.35, 1)
                         else
                             holder.ring:SetVertexColor(0.90, 0.20, 0.20, 1)
                         end
                         holder.buffDef = buffDef
                         holder.hasBuff = hasBuff
+                        holder.gearAudit = entry.gearAudit
                         holder:Show()
                     else
                         holder.buffDef = nil
@@ -431,7 +462,10 @@ function ILvlCheck:UpdateUI()
                     row.buffIcons[iconIndex]:Hide()
                 end
 
-                local statusLabel = entry.status == "Scanning..." and "Scanning..." or "Offline"
+                local statusLabel = "Offline"
+                if entry.status == "Scanning..." or entry.status == "Out of range" then
+                    statusLabel = entry.status
+                end
                 local sr, sg, sb = self:GetStatusColor(statusLabel)
                 row.statusText:SetTextColor(sr, sg, sb)
                 row.statusText:SetText(statusLabel)

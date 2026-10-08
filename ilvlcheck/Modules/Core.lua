@@ -17,16 +17,17 @@ ILvlCheck.inspectTimeout = 3
 ILvlCheck.thresholdAlerted = {}
 ILvlCheck.scanAnnounced = {}
 ILvlCheck.autoShowDelay = 1
-ILvlCheck.version = "1.2.0"
+ILvlCheck.version = "1.3.0"
 ILvlCheck.testMode = false
 ILvlCheck.visibleBuffs = {}
 
 ns.STATUS_COLORS = {
     ["Scanning..."] = { 1.00, 0.82, 0.00 },
     ["Offline"] = { 0.62, 0.62, 0.66 },
+    ["Out of range"] = { 0.95, 0.65, 0.30 },
 }
 
-ns.ROW_WIDTH = 424
+ns.ROW_WIDTH = 464
 ns.ROW_HEIGHT = 46
 ns.ROW_GAP = 8
 ns.ROWS_TOP_OFFSET = 104
@@ -82,6 +83,13 @@ ns.BUFF_DEFINITIONS = {
           "Flask of Thalassian Resistance", "Flask of the Blood Knights", "Flask of the Magisters",
           "Flask of the Shattered Sun", "Vicious Thalassian Flask of Honor",
       } },
+    -- Temporary weapon enchant (oil / whetstone). Only readable for yourself,
+    -- other players' temporary enchants aren't exposed, so their slot is blank.
+    { key = "WEAPON_OIL", label = "Weapon Oil", kind = "weapon", icon = "inv_misc_potionsetc",
+      selfOnly = true },
+    -- Not an aura: filled from the gear audit in Gear.lua (missing enchants and
+    -- empty sockets), shown in the same strip so it reads like the buffs.
+    { key = "GEAR", label = "Enchants & Gems", kind = "gear", icon = "trade_engraving" },
 }
 
 for _, buffDef in ipairs(ns.BUFF_DEFINITIONS) do

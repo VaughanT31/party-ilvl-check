@@ -17,6 +17,7 @@ function ILvlCheck:GenerateTestRoster()
     if playerEntry then
         playerEntry.specName = self:GetPlayerSpecName()
         playerEntry.buffStatus = self:GenerateMockBuffStatus()
+        self:ApplyGearAudit(playerEntry, self:GenerateMockGearAudit())
     end
 
     local playerRole
@@ -71,6 +72,7 @@ function ILvlCheck:GenerateTestRoster()
                 status = "Ready",
                 buffStatus = self:GenerateMockBuffStatus(),
             }
+            self:ApplyGearAudit(self.players[key], self:GenerateMockGearAudit())
             self.displayOrder[#self.displayOrder + 1] = key
         end
     end

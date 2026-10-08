@@ -14,12 +14,36 @@ function ILvlCheck:ComputeBuffRelevance()
 
     local visible = {}
     for _, buffDef in ipairs(BUFF_DEFINITIONS) do
-        if buffDef.kind == "consumable" or (buffDef.providerClass and providerClasses[buffDef.providerClass]) then
+        if buffDef.kind ~= "class" or (buffDef.providerClass and providerClasses[buffDef.providerClass]) then
             visible[#visible + 1] = buffDef
         end
     end
 
     self.visibleBuffs = visible
+end
+
+local function HasAuraBuff(unit, buffDef, auraNames)
+    if auraNames[buffDef.label] then
+        return true
+    end
+
+    if buffDef.spellIds then
+        for _, spellId in ipairs(buffDef.spellIds) do
+            if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellID and C_UnitAuras.GetAuraDataBySpellID(unit, spellId, "HELPFUL") then
+                return true
+            end
+        end
+    end
+
+    if buffDef.names then
+        for _, name in ipairs(buffDef.names) do
+            if auraNames[name] then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 function ILvlCheck:ScanEntryBuffs(entry)
@@ -45,27 +69,14 @@ function ILvlCheck:ScanEntryBuffs(entry)
     end
 
     for _, buffDef in ipairs(BUFF_DEFINITIONS) do
-        local hasBuff = auraNames[buffDef.label] == true
-
-        if not hasBuff and buffDef.spellIds then
-            for _, spellId in ipairs(buffDef.spellIds) do
-                if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellID and C_UnitAuras.GetAuraDataBySpellID(unit, spellId, "HELPFUL") then
-                    hasBuff = true
-                    break
-                end
+        if buffDef.kind == "weapon" then
+            if UnitIsUnit(unit, "player") then
+                entry.buffStatus[buffDef.key] = self:HasWeaponOil()
             end
+        elseif buffDef.kind ~= "gear" then
+            -- "gear" is set by ApplyGearAudit (Gear.lua), not from auras.
+            entry.buffStatus[buffDef.key] = HasAuraBuff(unit, buffDef, auraNames)
         end
-
-        if not hasBuff and buffDef.names then
-            for _, name in ipairs(buffDef.names) do
-                if auraNames[name] then
-                    hasBuff = true
-                    break
-                end
-            end
-        end
-
-        entry.buffStatus[buffDef.key] = hasBuff
     end
 end
 
@@ -99,9 +110,15 @@ function ILvlCheck:RescanBuffs()
         local entry = self.players[self.displayOrder[index]]
         if entry then
             self:ScanEntryBuffs(entry)
+            -- Your own gear can change while the window is open (enchanting
+            -- or socketing at the table), so it's re-audited each poll.
+            if entry.unit and UnitIsUnit(entry.unit, "player") then
+                self:ApplyGearAudit(entry, self:AuditGear("player"))
+            end
         end
     end
 
+    self:RetryOutOfRange()
     self:UpdateUI()
 end
 

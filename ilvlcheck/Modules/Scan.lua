@@ -320,6 +320,7 @@ function ILvlCheck:RefreshPartyScan()
                     local _, entry = self:SetEntry(unit, "Ready", playerLevel)
                     if entry then
                         entry.specName = self:GetPlayerSpecName()
+                        self:ApplyGearAudit(entry, self:AuditGear("player"))
                     end
                 else
                     self:SetEntry(unit, "Not inspectable", nil)
@@ -353,6 +354,35 @@ function ILvlCheck:RefreshPartyScan()
     end
 end
 
+-- Called from the buff poll while the window is open: anyone marked "Out of
+-- range" who has since come close is queued for inspection again, so the
+-- window fills in on its own instead of needing Refresh. Skipped in combat,
+-- where CheckInteractDistance is restricted.
+function ILvlCheck:RetryOutOfRange()
+    if self.testMode or (InCombatLockdown and InCombatLockdown()) then
+        return
+    end
+
+    local wasIdle = #self.inspectQueue == 0 and not self.waitingForInspect
+    local queued = false
+
+    for index = 1, #self.displayOrder do
+        local entry = self.players[self.displayOrder[index]]
+        local unit = entry and entry.unit
+        if entry and entry.status == "Out of range" and unit and UnitExists(unit)
+            and UnitIsConnected(unit) and CanInspect(unit) and CheckInteractDistance(unit, 1)
+            and not TableContains(self.inspectQueue, unit) then
+            entry.status = "Scanning..."
+            self.inspectQueue[#self.inspectQueue + 1] = unit
+            queued = true
+        end
+    end
+
+    if queued and wasIdle then
+        self:ScheduleNextInspect(0.1)
+    end
+end
+
 function ILvlCheck:INSPECT_READY(inspectGUID)
     if not self.waitingForInspect or not self.pendingGUID or inspectGUID ~= self.pendingGUID then
         return
@@ -363,7 +393,10 @@ function ILvlCheck:INSPECT_READY(inspectGUID)
         itemLevel = RoundItemLevel(C_PaperDollInfo.GetInspectItemLevel(self.pendingUnit))
     end
 
+    -- Gear links are only readable until FinishPendingInspect clears the
+    -- inspect, so the enchant/gem audit has to happen here.
     if itemLevel then
+        self:ApplyGearAudit(self.players[self.pendingKey], self:AuditGear(self.pendingUnit))
         self:FinishPendingInspect("Ready", itemLevel)
     else
         self:FinishPendingInspect("Not inspectable", nil)
