@@ -1,4 +1,4 @@
-## Interface: 121500
+## Interface: 120105
 ## Title: Party iLvl Check
 ## Notes: Displays party item levels when entering 5-player instances, staying hidden during active Mythic+ timers.
 ## Author: CtrlShiftZed
