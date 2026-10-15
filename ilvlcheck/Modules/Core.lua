@@ -17,7 +17,7 @@ ILvlCheck.inspectTimeout = 3
 ILvlCheck.thresholdAlerted = {}
 ILvlCheck.scanAnnounced = {}
 ILvlCheck.autoShowDelay = 1
-ILvlCheck.version = "1.3.0"
+ILvlCheck.version = "1.4.0"
 ILvlCheck.testMode = false
 ILvlCheck.visibleBuffs = {}
 
@@ -30,7 +30,12 @@ ns.STATUS_COLORS = {
 ns.ROW_WIDTH = 464
 ns.ROW_HEIGHT = 46
 ns.ROW_GAP = 8
-ns.ROWS_TOP_OFFSET = 104
+ns.ROWS_TOP_OFFSET = 138
+-- The group utility bar sits between the summary tiles and the rows.
+ns.UTILITY_TOP_OFFSET = 102
+ns.UTILITY_ICON_SIZE = 22
+-- Raid mode's scrolling list fills the space the five party rows use.
+ns.RAID_AREA_HEIGHT = 286
 ns.BUFF_ICON_START_X = 158
 ns.BUFF_ICON_GAP = 4
 ns.BUFF_ICON_SIZE = 22
@@ -99,16 +104,16 @@ end
 ns.MAX_BUFF_ICONS = #ns.BUFF_DEFINITIONS
 
 ns.MOCK_POOL = {
-    { classFile = "DRUID", specName = "Restoration", role = "HEALER", name = "Barkheal" },
-    { classFile = "WARRIOR", specName = "Protection", role = "TANK", name = "Ironhide" },
-    { classFile = "PALADIN", specName = "Protection", role = "TANK", name = "Lightwall" },
-    { classFile = "PRIEST", specName = "Holy", role = "HEALER", name = "Faithbringer" },
-    { classFile = "SHAMAN", specName = "Enhancement", role = "DAMAGER", name = "Stormcaller" },
-    { classFile = "MAGE", specName = "Frost", role = "DAMAGER", name = "Frostbolt" },
-    { classFile = "ROGUE", specName = "Assassination", role = "DAMAGER", name = "Shadowstep" },
-    { classFile = "DEMONHUNTER", specName = "Havoc", role = "DAMAGER", name = "Felstrike" },
-    { classFile = "MONK", specName = "Mistweaver", role = "HEALER", name = "Chiji" },
-    { classFile = "DEATHKNIGHT", specName = "Blood", role = "TANK", name = "Gravebind" },
+    { classFile = "DRUID", specName = "Restoration", specID = 105, role = "HEALER", name = "Barkheal" },
+    { classFile = "WARRIOR", specName = "Protection", specID = 73, role = "TANK", name = "Ironhide" },
+    { classFile = "PALADIN", specName = "Protection", specID = 66, role = "TANK", name = "Lightwall" },
+    { classFile = "PRIEST", specName = "Holy", specID = 257, role = "HEALER", name = "Faithbringer" },
+    { classFile = "SHAMAN", specName = "Enhancement", specID = 263, role = "DAMAGER", name = "Stormcaller" },
+    { classFile = "MAGE", specName = "Frost", specID = 64, role = "DAMAGER", name = "Frostbolt" },
+    { classFile = "ROGUE", specName = "Assassination", specID = 259, role = "DAMAGER", name = "Shadowstep" },
+    { classFile = "DEMONHUNTER", specName = "Havoc", specID = 577, role = "DAMAGER", name = "Felstrike" },
+    { classFile = "MONK", specName = "Mistweaver", specID = 270, role = "HEALER", name = "Chiji" },
+    { classFile = "DEATHKNIGHT", specName = "Blood", specID = 250, role = "TANK", name = "Gravebind" },
 }
 
 function ns.TableContains(list, value)

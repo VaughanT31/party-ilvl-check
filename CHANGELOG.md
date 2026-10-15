@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0
+
+- **Their best run in this dungeon:** each row shows the player's best key in the dungeon you're in, green when timed, orange when over time, or "none here". Outside a dungeon it uses your own keystone's dungeon, named at the top of the window.
+- **Group utility bar:** interrupts, magic, curse, poison and disease dispels, battle res and Bloodlust for the whole group at a glance. Hover an icon for who brings it.
+- **Everyone's keys:** the group bar counts the keystones in your group; hover for each player's key. Your own always shows; other players' show when an addon that shares keys (like BigWigs) is installed.
+- **Tier set count** in the gear icon's tooltip.
+- **Post button:** a short summary of the group check to party or instance chat (`/ilvlcheck post` works too).
+- **Raid mode:** in a raid group the window lists everyone as compact rows in a scrolling list, with item level, spec, the buff and gear icons and the group utility bar. Open it with `/ilvlcheck` or the minimap button; it doesn't pop up by itself in raids. `/ilvlcheck testraid` shows a made-up raid.
+- **Group finder applicants:** when you list a Mythic+ key, each applicant's row shows their best run in your dungeon, and their item level turns orange when it's under your Min iLvl.
+
 ## 1.3.0
 
 - **Enchant and gem check:** a new icon in each player's strip flags missing enchants and empty sockets. Hover it to see which slots.

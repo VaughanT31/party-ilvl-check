@@ -9,8 +9,16 @@ function ILvlCheck:GROUP_ROSTER_UPDATE()
         return
     end
 
-    if self.frame and self.frame:IsShown() then
-        self:RefreshPartyScan()
+    -- Raids fire this constantly (subgroup moves, people zoning), and every
+    -- rescan starts the inspect queue again, so wait for it to settle.
+    if self.frame and self.frame:IsShown() and not self.rosterRefreshQueued then
+        self.rosterRefreshQueued = true
+        C_Timer.After(IsInRaid() and 2 or 0.5, function()
+            ILvlCheck.rosterRefreshQueued = false
+            if ILvlCheck.frame:IsShown() and not ILvlCheck.testMode then
+                ILvlCheck:RefreshPartyScan()
+            end
+        end)
     end
 end
 
@@ -98,9 +106,23 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
     ILvlCheckDB = ILvlCheckDB or {}
     self:CreateUI()
     self:CreateMinimapButton()
+    self:HookGroupFinder()
 
     SLASH_ILVLCHECK1 = "/ilvlcheck"
-    SlashCmdList.ILVLCHECK = function()
+    SlashCmdList.ILVLCHECK = function(msg)
+        msg = (msg or ""):lower():match("^%s*(.-)%s*$")
+        if msg == "testraid" or msg == "test raid" then
+            ILvlCheck.testMode, ILvlCheck.testRaid = true, true
+            if not ILvlCheck.frame:IsShown() then
+                ILvlCheck.frame:Show()
+            else
+                ILvlCheck:RefreshPartyScan()
+            end
+            return
+        elseif msg == "post" then
+            ILvlCheck:PostSummary()
+            return
+        end
         ILvlCheck:ToggleWindow()
     end
 

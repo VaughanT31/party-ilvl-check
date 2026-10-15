@@ -58,6 +58,30 @@ local function CountSockets(link)
     return sockets
 end
 
+-- Tier set pieces: the five tier slots, counted by the item set they belong
+-- to (C_Item.GetItemInfo's setID). The biggest set wins, so a stray crafted or
+-- PvP set piece doesn't count. Items the game hasn't cached yet are skipped,
+-- so a count can come in low the first time.
+local TIER_SLOTS = { 1, 3, 5, 7, 10 } -- head, shoulder, chest, legs, hands
+
+local function CountTierPieces(unit)
+    local getInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+    if not getInfo then
+        return nil
+    end
+    local bySet, best = {}, 0
+    for _, slot in ipairs(TIER_SLOTS) do
+        local link = GetInventoryItemLink(unit, slot)
+        local setID = link and select(16, getInfo(link))
+        if setID and setID > 0 then
+            bySet[setID] = (bySet[setID] or 0) + 1
+            best = math.max(best, bySet[setID])
+        end
+    end
+    return best
+end
+ns.CountTierPieces = CountTierPieces
+
 local function IsWeapon(link)
     local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
     if not getInfo then
@@ -107,6 +131,7 @@ function ILvlCheck:AuditGear(unit)
     if not anyItem then
         return nil
     end
+    audit.tierPieces = CountTierPieces(unit)
     return audit
 end
 
@@ -135,8 +160,9 @@ function ILvlCheck:HasWeaponOil()
 end
 
 function ILvlCheck:GenerateMockGearAudit()
+    local tier = math.random(2, 5)
     if math.random() > 0.4 then
-        return { missingEnchants = {}, emptySockets = {} }
+        return { missingEnchants = {}, emptySockets = {}, tierPieces = tier }
     end
-    return { missingEnchants = { "Legs", "Ring 2" }, emptySockets = { "Neck" } }
+    return { missingEnchants = { "Legs", "Ring 2" }, emptySockets = { "Neck" }, tierPieces = tier }
 end

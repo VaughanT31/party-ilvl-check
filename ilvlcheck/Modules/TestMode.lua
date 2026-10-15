@@ -9,6 +9,7 @@ function ILvlCheck:GenerateTestRoster()
     wipe(self.displayOrder)
     wipe(self.thresholdAlerted)
     wipe(self.scanAnnounced)
+    self.dungeonMapID, self.dungeonName = nil, "Test dungeon"
 
     local minimum = GetMinimumItemLevel() or 270
 
@@ -17,6 +18,8 @@ function ILvlCheck:GenerateTestRoster()
     if playerEntry then
         playerEntry.specName = self:GetPlayerSpecName()
         playerEntry.buffStatus = self:GenerateMockBuffStatus()
+        playerEntry.dungeonRun = { level = math.random(8, 16), timed = true }
+        playerEntry.testKeystone = { level = math.random(10, 16), mapID = nil }
         self:ApplyGearAudit(playerEntry, self:GenerateMockGearAudit())
     end
 
@@ -67,6 +70,11 @@ function ILvlCheck:GenerateTestRoster()
                 classFile = mock.classFile,
                 displayName = mock.name,
                 specName = mock.specName,
+                specID = mock.specID,
+                -- One with no run here, one over time, the rest timed.
+                dungeonRun = (index == 1) and false or { level = math.random(6, 18), timed = index ~= 3 },
+                -- One without a key, one unknown (no LibKeystone), the rest with keys.
+                testKeystone = (index == 2) and false or (index == 4) and nil or { level = math.random(6, 18), mapID = nil },
                 mythicRating = (index == 2) and 0 or math.random(800, 3200),
                 ilvl = ilvl,
                 status = "Ready",

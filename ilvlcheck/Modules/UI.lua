@@ -16,6 +16,8 @@ local SetMinimumItemLevel = ns.SetMinimumItemLevel
 local ShouldShowScanAnnouncements = ns.ShouldShowScanAnnouncements
 local SetShowScanAnnouncements = ns.SetShowScanAnnouncements
 local FormatDelta = ns.FormatDelta
+local UTILITY_TOP_OFFSET = ns.UTILITY_TOP_OFFSET
+local UTILITY_ICON_SIZE = ns.UTILITY_ICON_SIZE
 
 function ILvlCheck:GetStatusColor(status)
     local color = STATUS_COLORS[status]
@@ -30,6 +32,12 @@ function ILvlCheck:AddGearTooltipLines(audit)
     if not audit then
         GameTooltip:AddLine("Not checked yet", 0.62, 0.62, 0.66)
         return
+    end
+
+    if audit.tierPieces then
+        local pieces = audit.tierPieces
+        GameTooltip:AddLine(("Tier set: %d of 5 pieces"):format(pieces),
+            pieces >= 4 and 0.30 or 1.00, pieces >= 4 and 0.85 or 0.65, pieces >= 4 and 0.35 or 0.20)
     end
 
     if #audit.missingEnchants == 0 and #audit.emptySockets == 0 then
@@ -205,7 +213,7 @@ function ILvlCheck:CreateUI()
     end
 
     local frame = CreateFrame("Frame", "ILvlCheckMainFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(ROW_WIDTH + 36, 500)
+    frame:SetSize(ROW_WIDTH + 36, 534)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("MEDIUM")
     frame:SetMovable(true)
@@ -228,6 +236,14 @@ function ILvlCheck:CreateUI()
     title:SetText("Party iLvl Check")
     frame.title = title
 
+    -- The dungeon the "here" runs are for.
+    local dungeonText = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    dungeonText:SetPoint("LEFT", title, "RIGHT", 10, -1)
+    dungeonText:SetPoint("RIGHT", frame, "RIGHT", -44, 0)
+    dungeonText:SetJustifyH("LEFT")
+    dungeonText:SetWordWrap(false)
+    frame.dungeonText = dungeonText
+
     local closeButton = CreateFlatButton(frame, { 0.45, 0.14, 0.14 }, "x")
     closeButton:SetSize(22, 22)
     closeButton:SetPoint("TOPRIGHT", -12, -12)
@@ -248,14 +264,32 @@ function ILvlCheck:CreateUI()
     end
     frame.summaryTiles = summaryTiles
 
+    self:CreateUtilityBar(frame)
+
     local refreshButton = CreateFlatButton(frame, { 0.42, 0.32, 0.10 }, "Refresh")
     refreshButton:SetSize(90, 26)
-    refreshButton:SetPoint("BOTTOM", 0, 36)
+    refreshButton:SetPoint("BOTTOM", -50, 36)
     refreshButton.label:SetTextColor(1, 0.92, 0.75)
     refreshButton:SetScript("OnClick", function()
         ILvlCheck:RefreshPartyScan()
     end)
     frame.refreshButton = refreshButton
+
+    local postButton = CreateFlatButton(frame, { 0.16, 0.22, 0.32 }, "Post")
+    postButton:SetSize(90, 26)
+    postButton:SetPoint("LEFT", refreshButton, "RIGHT", 10, 0)
+    postButton.label:SetTextColor(0.80, 0.90, 1.00)
+    postButton:SetScript("OnClick", function()
+        ILvlCheck:PostSummary()
+    end)
+    postButton:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText("Post to chat")
+        GameTooltip:AddLine("Item levels, best runs here, what the group is missing and everyone's keys, in party or instance chat.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    postButton:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.postButton = postButton
 
     local minLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     minLabel:SetPoint("BOTTOMLEFT", 20, 90)
@@ -305,6 +339,7 @@ function ILvlCheck:CreateUI()
     testModeCheck:SetChecked(false)
     testModeCheck:SetScript("OnClick", function(checkButton)
         ILvlCheck.testMode = checkButton:GetChecked() and true or false
+        ILvlCheck.testRaid = false
 
         if ILvlCheck.testMode then
             ILvlCheck:StopBuffPolling()
@@ -322,6 +357,7 @@ function ILvlCheck:CreateUI()
     for index = 1, 5 do
         self.rowPool[index] = self:CreateRow(frame, index)
     end
+    self:CreateRaidArea(frame)
 
     frame:SetScript("OnShow", function()
         if ILvlCheck:IsKeystoneTimerRunning() then
@@ -361,6 +397,14 @@ function ILvlCheck:UpdateUI()
         self:SetEntry("player", "Not inspectable")
     end
 
+    if self:ApplyLayoutMode() then
+        self:UpdateRaidRows()
+        self:UpdateSummary()
+        self:UpdateUtilityBar()
+        self.frame.dungeonText:SetText(("%d players"):format(#self.displayOrder))
+        return
+    end
+
     for index = 1, #self.rowPool do
         local row = self.rowPool[index]
         local key = self.displayOrder[index]
@@ -388,7 +432,12 @@ function ILvlCheck:UpdateUI()
                         row.scoreText:SetTextColor(0.70, 0.82, 1.00)
                     end
 
-                    row.scoreText:SetText("M+ Score: " .. tostring(entry.mythicRating))
+                    local here = ns.FormatDungeonRun(entry.dungeonRun)
+                    row.scoreText:SetText("M+ Score: " .. tostring(entry.mythicRating) .. (here and ("  |cff5a5a62|||r  " .. here) or ""))
+                    row.scoreText:Show()
+                elseif ns.FormatDungeonRun(entry.dungeonRun) then
+                    row.scoreText:SetTextColor(0.70, 0.82, 1.00)
+                    row.scoreText:SetText(ns.FormatDungeonRun(entry.dungeonRun))
                     row.scoreText:Show()
                 else
                     row.scoreText:Hide()
@@ -480,6 +529,141 @@ function ILvlCheck:UpdateUI()
     end
 
     self:UpdateSummary()
+    self:UpdateUtilityBar()
+    if self.frame.dungeonText then
+        self.frame.dungeonText:SetText(self.dungeonName and ("Best runs in " .. self.dungeonName) or "")
+    end
+end
+
+-- Group utility bar --------------------------------------------------------
+
+function ILvlCheck:CreateUtilityBar(frame)
+    local bar = CreateFrame("Frame", nil, frame)
+    bar:SetSize(ROW_WIDTH, UTILITY_ICON_SIZE + 6)
+    bar:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, -UTILITY_TOP_OFFSET)
+
+    local label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    label:SetPoint("LEFT", 2, 0)
+    label:SetText("GROUP")
+    label:SetTextColor(0.65, 0.65, 0.70)
+
+    bar.icons = {}
+    local previous
+    for index, def in ipairs(ns.UTILITY_DEFINITIONS) do
+        local holder = CreateFrame("Frame", nil, bar)
+        holder:SetSize(UTILITY_ICON_SIZE + BUFF_RING_PADDING, UTILITY_ICON_SIZE + BUFF_RING_PADDING)
+        if previous then
+            holder:SetPoint("LEFT", previous, "RIGHT", 8, 0)
+        else
+            holder:SetPoint("LEFT", bar, "LEFT", 56, 0)
+        end
+        holder.def = def
+
+        holder.ring = holder:CreateTexture(nil, "BACKGROUND")
+        holder.ring:SetAllPoints()
+        holder.ring:SetColorTexture(1, 1, 1, 1)
+        local ringMask = holder:CreateMaskTexture()
+        ringMask:SetAllPoints(holder.ring)
+        ringMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        holder.ring:AddMaskTexture(ringMask)
+
+        holder.icon = holder:CreateTexture(nil, "ARTWORK")
+        holder.icon:SetPoint("CENTER")
+        holder.icon:SetSize(UTILITY_ICON_SIZE, UTILITY_ICON_SIZE)
+        holder.icon:SetTexture(def.iconPath)
+        local iconMask = holder:CreateMaskTexture()
+        iconMask:SetAllPoints(holder.icon)
+        iconMask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        holder.icon:AddMaskTexture(iconMask)
+
+        holder.count = holder:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+        holder.count:SetPoint("BOTTOMRIGHT", 3, -2)
+
+        holder:EnableMouse(true)
+        holder:SetScript("OnEnter", function(self)
+            local slot = ILvlCheck.groupUtility and ILvlCheck.groupUtility[self.def.key]
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(self.def.label)
+            if slot and slot.count > 0 then
+                GameTooltip:AddLine("Likely from: " .. table.concat(slot.names, ", "), 1, 1, 1, true)
+            else
+                GameTooltip:AddLine("Nobody in the group brings this.", 0.90, 0.20, 0.20, true)
+            end
+            if self.def.note then
+                GameTooltip:AddLine(self.def.note, 0.65, 0.65, 0.70, true)
+            end
+            GameTooltip:AddLine("From class and spec; talents can change it.", 0.50, 0.50, 0.55, true)
+            GameTooltip:Show()
+        end)
+        holder:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        bar.icons[index] = holder
+        previous = holder
+    end
+
+    -- Keys: "4 keys", hover for the list.
+    local keys = CreateFrame("Frame", nil, bar)
+    keys:SetSize(110, UTILITY_ICON_SIZE)
+    keys:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
+    keys.icon = keys:CreateTexture(nil, "ARTWORK")
+    keys.icon:SetSize(UTILITY_ICON_SIZE, UTILITY_ICON_SIZE)
+    keys.icon:SetPoint("RIGHT")
+    keys.icon:SetTexture("Interface\\Icons\\inv_relics_hourglass")
+    keys.text = keys:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    keys.text:SetPoint("RIGHT", keys.icon, "LEFT", -6, 0)
+    keys.text:SetJustifyH("RIGHT")
+    keys:EnableMouse(true)
+    keys:SetScript("OnEnter", function(self)
+        local list, unknown = ILvlCheck:ListKeystones()
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText("Keystones")
+        for _, key in ipairs(list) do
+            local color = key.classFile and RAID_CLASS_COLORS[key.classFile]
+            GameTooltip:AddDoubleLine(key.name, ("+%d %s"):format(key.level, key.mapID and ns.KeystoneMapName(key.mapID) or ""),
+                color and color.r or 1, color and color.g or 1, color and color.b or 1, 1, 0.82, 0)
+        end
+        if #list == 0 then
+            GameTooltip:AddLine("No keys seen yet.", 0.65, 0.65, 0.70)
+        end
+        if unknown > 0 then
+            if ILvlCheck:HasKeystoneLib() then
+                GameTooltip:AddLine(("%d player%s didn't answer (their addons don't share keys)."):format(unknown, unknown == 1 and "" or "s"), 0.65, 0.65, 0.70, true)
+            else
+                GameTooltip:AddLine("Other players' keys show when an addon that shares keys (like BigWigs) is installed.", 0.65, 0.65, 0.70, true)
+            end
+        end
+        GameTooltip:Show()
+    end)
+    keys:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    bar.keys = keys
+
+    frame.utilityBar = bar
+end
+
+local UTILITY_COLORS = {
+    good = { 0.30, 0.85, 0.35 },
+    short = { 1.00, 0.65, 0.20 },
+    missing = { 0.90, 0.20, 0.20 },
+}
+
+function ILvlCheck:UpdateUtilityBar()
+    local bar = self.frame and self.frame.utilityBar
+    if not bar then
+        return
+    end
+
+    local utility = self:ComputeGroupUtility()
+    for _, holder in ipairs(bar.icons) do
+        local slot = utility[holder.def.key]
+        local state = ns.UtilityState(holder.def, slot)
+        local color = UTILITY_COLORS[state]
+        holder.ring:SetVertexColor(color[1], color[2], color[3], 1)
+        holder.icon:SetDesaturated(state == "missing")
+        holder.count:SetText(holder.def.want and slot and slot.count > 0 and tostring(slot.count) or "")
+    end
+
+    local list = self:ListKeystones()
+    bar.keys.text:SetText(#list == 0 and "|cff8c8c94No keys|r" or (#list == 1 and "1 key" or (#list .. " keys")) .. (list[1] and ("  |cffffd100+" .. list[1].level .. "|r") or ""))
 end
 
 function ILvlCheck:GetReadinessCounts()

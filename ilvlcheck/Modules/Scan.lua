@@ -8,6 +8,10 @@ local GetMinimumItemLevel = ns.GetMinimumItemLevel
 local ShouldShowScanAnnouncements = ns.ShouldShowScanAnnouncements
 
 function ILvlCheck:GetRosterUnits()
+    if IsInRaid and IsInRaid() then
+        return self:GetRaidUnits()
+    end
+
     local units = { "player" }
     local subgroupMembers = GetNumSubgroupMembers()
 
@@ -52,6 +56,19 @@ function ILvlCheck:GetPlayerSpecName()
     return specName
 end
 
+function ILvlCheck:GetPlayerSpecID()
+    local specIndex = GetSpecialization and GetSpecialization()
+    return specIndex and GetSpecializationInfo(specIndex) or nil
+end
+
+function ILvlCheck:GetInspectedSpecID(unit)
+    local specID = GetInspectSpecialization and GetInspectSpecialization(unit)
+    if not specID or specID == 0 then
+        return nil
+    end
+    return specID
+end
+
 function ILvlCheck:GetInspectedSpecName(unit)
     local specID = GetInspectSpecialization and GetInspectSpecialization(unit)
     if not specID or specID == 0 then
@@ -86,7 +103,9 @@ function ILvlCheck:SetEntry(unit, status, ilvl)
     entry.classFile = select(2, UnitClass(unit))
     entry.displayName = self:GetDisplayName(unit, key)
     entry.specName = entry.specName or (UnitIsUnit(unit, "player") and self:GetPlayerSpecName() or nil)
+    entry.specID = entry.specID or (UnitIsUnit(unit, "player") and self:GetPlayerSpecID() or nil)
     entry.mythicRating = self:GetMythicPlusRating(unit)
+    entry.dungeonRun = self:GetDungeonRun(unit, self.dungeonMapID)
     entry.ilvl = ilvl
     entry.status = status
     self.players[key] = entry
@@ -220,7 +239,11 @@ function ILvlCheck:FinishPendingInspect(status, ilvl)
         entry.ilvl = ilvl
         entry.status = status
         entry.specName = entry.specName or self:GetInspectedSpecName(self.pendingUnit)
+        entry.specID = entry.specID or self:GetInspectedSpecID(self.pendingUnit)
         entry.mythicRating = entry.mythicRating or self:GetMythicPlusRating(self.pendingUnit)
+        if entry.dungeonRun == nil then
+            entry.dungeonRun = self:GetDungeonRun(self.pendingUnit, self.dungeonMapID)
+        end
     end
 
     self.waitingForInspect = false
@@ -301,7 +324,11 @@ function ILvlCheck:RefreshPartyScan()
     self:ResetInspectState()
 
     if self.testMode then
-        self:GenerateTestRoster()
+        if self.testRaid then
+            self:GenerateTestRaid()
+        else
+            self:GenerateTestRoster()
+        end
         return
     end
 
@@ -309,6 +336,13 @@ function ILvlCheck:RefreshPartyScan()
     wipe(self.displayOrder)
     wipe(self.thresholdAlerted)
     wipe(self.scanAnnounced)
+    self.dungeonMapID, self.dungeonName = self:GetCurrentChallengeMap()
+    -- Keys are a party thing: LibKeystone only asks party chat.
+    if not self:IsRaidMode() then
+        self:RequestKeystones()
+    else
+        wipe(self.keystones)
+    end
 
     local units = self:GetRosterUnits()
     for index = 1, #units do

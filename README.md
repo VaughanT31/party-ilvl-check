@@ -19,6 +19,18 @@ A World of Warcraft addon that shows your party's item levels, Mythic+ scores, b
 
 Players who were out of range are checked again automatically once they come close, no need to rescan by hand.
 
+**Best run in this dungeon.** Each row shows that player's best key in the current dungeon (`+14 here`, green when timed, orange when over time, or `none here`). Outside a dungeon it uses the dungeon of your own keystone.
+
+**Group utility bar.** Above the rows: interrupts, magic, curse, poison and disease dispels, battle res and Bloodlust for the whole group, green when covered, amber for a single interrupt, red when missing. Hover for who brings it. Based on class and spec (`ilvlcheck/Modules/Utility.lua`), so talents can change it.
+
+**Keystones.** The right end of the group bar counts the group's keys; hover it for each player's key, highest first. Your own key comes from the game. Other players' keys come from LibKeystone when another addon (BigWigs and others) has loaded it; Party iLvl Check doesn't bundle it.
+
+**Tier set and Post.** The gear icon's tooltip shows each player's tier set pieces. *Post* sends a short summary (item levels, best runs here, missing utility, keys) to party or instance chat, or prints it for you when you're alone or in Test Mode.
+
+**Raid mode.** In a raid group the window shows everyone as compact rows in a scrolling list. It doesn't open by itself in raids; use `/ilvlcheck` or the minimap button. `/ilvlcheck testraid` shows a made-up raid.
+
+**Group finder applicants.** When you list a Mythic+ key, each applicant row shows their best run in your dungeon, and item levels under your Min iLvl turn orange.
+
 **Buff strip.** Each row has a ring of icons, green when active and red when missing. Hover one to see which it is.
 
 | Icon | Checks |
@@ -42,6 +54,8 @@ Players who were out of range are checked again automatically once they come clo
 | Command | What it does |
 |---|---|
 | `/ilvlcheck` | Open or close the window |
+| `/ilvlcheck post` | Post the group summary to chat |
+| `/ilvlcheck testraid` | Show a made-up raid in raid mode |
 
 ## Install
 
