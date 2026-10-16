@@ -2,7 +2,7 @@
 ## Title: Party iLvl Check
 ## Notes: Displays party item levels when entering 5-player instances, staying hidden during active Mythic+ timers.
 ## Author: CtrlShiftZed
-## Version: 1.4.0
+## Version: 1.4.1
 ## Category: CtrlShift_Zed
 ## IconTexture: Interface\AddOns\ilvlcheck\icon
 ## SavedVariables: ILvlCheckDB

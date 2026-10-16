@@ -146,13 +146,22 @@ function ILvlCheck:GetPlayerItemLevel()
     return nil
 end
 
+-- Our inspect data is cleared once read, but never while Blizzard's inspect
+-- window is open: that would empty the player's own inspect.
+local function ClearOurInspect()
+    if not (InspectFrame and InspectFrame:IsShown()) then
+        ClearInspectPlayer()
+    end
+end
+
 function ILvlCheck:ResetInspectState()
     wipe(self.inspectQueue)
+    wipe(self.inspectAttempts)
     self.waitingForInspect = false
     self.pendingUnit = nil
     self.pendingGUID = nil
     self.pendingKey = nil
-    ClearInspectPlayer()
+    ClearOurInspect()
 end
 
 function ILvlCheck:ShowThresholdAlert(entry)
@@ -228,6 +237,34 @@ function ILvlCheck:ScheduleNextInspect(delay)
     end)
 end
 
+-- The queue holds player keys (Name-Realm), not unit tokens: in a raid,
+-- raid1..raid40 move to other players whenever someone joins, leaves or is
+-- moved, so a token queued a few seconds ago can point at someone else.
+function ILvlCheck:UnitForKey(key)
+    local units = self:GetRosterUnits()
+    for index = 1, #units do
+        local unit = units[index]
+        if UnitExists(unit) and self:GetUnitKey(unit) == key then
+            return unit
+        end
+    end
+    return nil
+end
+
+function ILvlCheck:QueueInspect(key)
+    if not TableContains(self.inspectQueue, key) then
+        self.inspectQueue[#self.inspectQueue + 1] = key
+    end
+end
+
+function ILvlCheck:ClearPending()
+    self.waitingForInspect = false
+    self.pendingUnit = nil
+    self.pendingGUID = nil
+    self.pendingKey = nil
+    ClearOurInspect()
+end
+
 function ILvlCheck:FinishPendingInspect(status, ilvl)
     if not self.pendingKey then
         return
@@ -238,6 +275,7 @@ function ILvlCheck:FinishPendingInspect(status, ilvl)
     if entry then
         entry.ilvl = ilvl
         entry.status = status
+        entry.failedAt = nil
         entry.specName = entry.specName or self:GetInspectedSpecName(self.pendingUnit)
         entry.specID = entry.specID or self:GetInspectedSpecID(self.pendingUnit)
         entry.mythicRating = entry.mythicRating or self:GetMythicPlusRating(self.pendingUnit)
@@ -245,12 +283,9 @@ function ILvlCheck:FinishPendingInspect(status, ilvl)
             entry.dungeonRun = self:GetDungeonRun(self.pendingUnit, self.dungeonMapID)
         end
     end
+    self.inspectAttempts[pendingKey] = nil
 
-    self.waitingForInspect = false
-    self.pendingUnit = nil
-    self.pendingGUID = nil
-    self.pendingKey = nil
-    ClearInspectPlayer()
+    self:ClearPending()
     self:UpdateUI()
     if ilvl and entry and not self.scanAnnounced[pendingKey] then
         self.scanAnnounced[pendingKey] = true
@@ -260,40 +295,64 @@ function ILvlCheck:FinishPendingInspect(status, ilvl)
     self:ScheduleNextInspect(self.scanDelay)
 end
 
+-- No answer in time, or an answer without an item level (their items
+-- weren't loaded yet, or another addon's inspect replaced ours: raids often
+-- run several addons that inspect). Tried again at the back of the queue, a
+-- little later, up to maxInspectAttempts times.
+function ILvlCheck:FailPendingInspect()
+    local key = self.pendingKey
+    if not key then
+        return
+    end
+
+    local entry = self.players[key]
+    local attempts = (self.inspectAttempts[key] or 0) + 1
+    self.inspectAttempts[key] = attempts
+    self:ClearPending()
+
+    if entry and attempts < self.maxInspectAttempts then
+        entry.status = "Scanning..."
+        self:QueueInspect(key)
+    elseif entry then
+        entry.status = "Not inspectable"
+        entry.failedAt = GetTime()
+        self.inspectAttempts[key] = nil
+    end
+
+    self:UpdateUI()
+    self:ScheduleNextInspect(self.retryDelay)
+end
+
 function ILvlCheck:ProcessNextInspect()
     if self.waitingForInspect then
         return
     end
 
-    local unit = table.remove(self.inspectQueue, 1)
+    local key = table.remove(self.inspectQueue, 1)
+    if not key then
+        return
+    end
+
+    local entry = self.players[key]
+    local unit = entry and self:UnitForKey(key)
     if not unit then
-        return
-    end
-
-    if not UnitExists(unit) then
         self:ScheduleNextInspect(0.1)
         return
     end
+    entry.unit = unit
 
-    local key = self:GetUnitKey(unit)
-    local entry = key and self.players[key]
-
-    if not key or not entry then
-        self:ScheduleNextInspect(0.1)
-        return
-    end
-
-    if not CanInspect(unit) then
+    if not UnitIsConnected(unit) or not CanInspect(unit) then
         entry.status = "Not inspectable"
+        entry.failedAt = GetTime()
         self:UpdateUI()
-        self:ScheduleNextInspect(self.scanDelay)
+        self:ScheduleNextInspect(0.1)
         return
     end
 
     if not CheckInteractDistance(unit, 1) then
         entry.status = "Out of range"
         self:UpdateUI()
-        self:ScheduleNextInspect(self.scanDelay)
+        self:ScheduleNextInspect(0.1)
         return
     end
 
@@ -306,20 +365,48 @@ function ILvlCheck:ProcessNextInspect()
     NotifyInspect(unit)
 
     local token = self.scanToken
-    local pendingKey = key
-    local pendingUnit = unit
+    local pendingGUID = self.pendingGUID
     C_Timer.After(self.inspectTimeout, function()
         if token ~= ILvlCheck.scanToken then
             return
         end
 
-        if ILvlCheck.waitingForInspect and ILvlCheck.pendingKey == pendingKey and ILvlCheck.pendingUnit == pendingUnit then
-            ILvlCheck:FinishPendingInspect("Not inspectable", nil)
+        if ILvlCheck.waitingForInspect and ILvlCheck.pendingKey == key and ILvlCheck.pendingGUID == pendingGUID then
+            ILvlCheck:FailPendingInspect()
         end
     end)
 end
 
-function ILvlCheck:RefreshPartyScan()
+-- Sorts one roster member into the list: yourself straight away, anyone
+-- else queued for inspection when they can be.
+function ILvlCheck:AddRosterUnit(unit)
+    if UnitIsUnit(unit, "player") then
+        local playerLevel = self:GetPlayerItemLevel()
+        if playerLevel then
+            local _, entry = self:SetEntry(unit, "Ready", playerLevel)
+            if entry then
+                entry.specName = self:GetPlayerSpecName()
+                self:ApplyGearAudit(entry, self:AuditGear("player"))
+            end
+        else
+            self:SetEntry(unit, "Not inspectable", nil)
+        end
+    elseif not UnitIsConnected(unit) or not CanInspect(unit) then
+        local _, entry = self:SetEntry(unit, "Not inspectable", nil)
+        if entry then entry.failedAt = GetTime() end
+    elseif not CheckInteractDistance(unit, 1) then
+        self:SetEntry(unit, "Out of range", nil)
+    else
+        local key = self:SetEntry(unit, "Scanning...", nil)
+        if key then self:QueueInspect(key) end
+    end
+end
+
+-- keepResults (roster changes): people already scanned keep their result and
+-- aren't inspected again, people who left are dropped, and only the rest are
+-- queued. Raids change their roster all the time, and starting over each
+-- time meant the people at the end of the queue were never reached.
+function ILvlCheck:RefreshPartyScan(keepResults)
     self.scanToken = self.scanToken + 1
     self:ResetInspectState()
 
@@ -332,10 +419,38 @@ function ILvlCheck:RefreshPartyScan()
         return
     end
 
-    wipe(self.players)
-    wipe(self.displayOrder)
-    wipe(self.thresholdAlerted)
-    wipe(self.scanAnnounced)
+    local units = self:GetRosterUnits()
+    local kept = {}
+    if keepResults then
+        local inRoster = {}
+        for index = 1, #units do
+            local key = UnitExists(units[index]) and self:GetUnitKey(units[index])
+            if key then inRoster[key] = units[index] end
+        end
+        local order = {}
+        for index = 1, #self.displayOrder do
+            local key = self.displayOrder[index]
+            local entry = self.players[key]
+            if entry and inRoster[key] then
+                order[#order + 1] = key
+                entry.unit = inRoster[key]
+                if entry.status == "Ready" and not UnitIsUnit(inRoster[key], "player") then
+                    kept[key] = true
+                end
+            else
+                self.players[key] = nil
+                self.thresholdAlerted[key] = nil
+                self.scanAnnounced[key] = nil
+            end
+        end
+        self.displayOrder = order
+    else
+        wipe(self.players)
+        wipe(self.displayOrder)
+        wipe(self.thresholdAlerted)
+        wipe(self.scanAnnounced)
+    end
+
     self.dungeonMapID, self.dungeonName = self:GetCurrentChallengeMap()
     -- Keys are a party thing: LibKeystone only asks party chat.
     if not self:IsRaidMode() then
@@ -344,30 +459,12 @@ function ILvlCheck:RefreshPartyScan()
         wipe(self.keystones)
     end
 
-    local units = self:GetRosterUnits()
     for index = 1, #units do
         local unit = units[index]
         if UnitExists(unit) then
-            if UnitIsUnit(unit, "player") then
-                local playerLevel = self:GetPlayerItemLevel()
-                if playerLevel then
-                    local _, entry = self:SetEntry(unit, "Ready", playerLevel)
-                    if entry then
-                        entry.specName = self:GetPlayerSpecName()
-                        self:ApplyGearAudit(entry, self:AuditGear("player"))
-                    end
-                else
-                    self:SetEntry(unit, "Not inspectable", nil)
-                end
-            elseif not UnitIsConnected(unit) then
-                self:SetEntry(unit, "Not inspectable", nil)
-            elseif not CanInspect(unit) then
-                self:SetEntry(unit, "Not inspectable", nil)
-            elseif not CheckInteractDistance(unit, 1) then
-                self:SetEntry(unit, "Out of range", nil)
-            else
-                self:SetEntry(unit, "Scanning...", nil)
-                self.inspectQueue[#self.inspectQueue + 1] = unit
+            local key = self:GetUnitKey(unit)
+            if not (key and kept[key]) then
+                self:AddRosterUnit(unit)
             end
         end
     end
@@ -389,9 +486,10 @@ function ILvlCheck:RefreshPartyScan()
 end
 
 -- Called from the buff poll while the window is open: anyone marked "Out of
--- range" who has since come close is queued for inspection again, so the
--- window fills in on its own instead of needing Refresh. Skipped in combat,
--- where CheckInteractDistance is restricted.
+-- range" who has since come close is queued for inspection again, and so is
+-- anyone who couldn't be inspected a while ago (retryAfterFail seconds), so
+-- the window fills in on its own instead of needing Refresh. Skipped in
+-- combat, where CheckInteractDistance is restricted.
 function ILvlCheck:RetryOutOfRange()
     if self.testMode or (InCombatLockdown and InCombatLockdown()) then
         return
@@ -399,15 +497,19 @@ function ILvlCheck:RetryOutOfRange()
 
     local wasIdle = #self.inspectQueue == 0 and not self.waitingForInspect
     local queued = false
+    local now = GetTime()
 
     for index = 1, #self.displayOrder do
-        local entry = self.players[self.displayOrder[index]]
-        local unit = entry and entry.unit
-        if entry and entry.status == "Out of range" and unit and UnitExists(unit)
-            and UnitIsConnected(unit) and CanInspect(unit) and CheckInteractDistance(unit, 1)
-            and not TableContains(self.inspectQueue, unit) then
+        local key = self.displayOrder[index]
+        local entry = self.players[key]
+        local retry = entry and (entry.status == "Out of range"
+            or (entry.status == "Not inspectable" and entry.failedAt and now - entry.failedAt >= self.retryAfterFail))
+        local unit = retry and self:UnitForKey(key)
+        if unit and not UnitIsUnit(unit, "player") and UnitIsConnected(unit) and CanInspect(unit)
+            and CheckInteractDistance(unit, 1) and not TableContains(self.inspectQueue, key) then
             entry.status = "Scanning..."
-            self.inspectQueue[#self.inspectQueue + 1] = unit
+            entry.unit = unit
+            self:QueueInspect(key)
             queued = true
         end
     end
@@ -423,7 +525,8 @@ function ILvlCheck:INSPECT_READY(inspectGUID)
     end
 
     local itemLevel
-    if self.pendingUnit and UnitExists(self.pendingUnit) and C_PaperDollInfo and C_PaperDollInfo.GetInspectItemLevel then
+    if self.pendingUnit and UnitExists(self.pendingUnit) and UnitGUID(self.pendingUnit) == self.pendingGUID
+        and C_PaperDollInfo and C_PaperDollInfo.GetInspectItemLevel then
         itemLevel = RoundItemLevel(C_PaperDollInfo.GetInspectItemLevel(self.pendingUnit))
     end
 
@@ -433,6 +536,6 @@ function ILvlCheck:INSPECT_READY(inspectGUID)
         self:ApplyGearAudit(self.players[self.pendingKey], self:AuditGear(self.pendingUnit))
         self:FinishPendingInspect("Ready", itemLevel)
     else
-        self:FinishPendingInspect("Not inspectable", nil)
+        self:FailPendingInspect()
     end
 end

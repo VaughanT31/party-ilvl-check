@@ -16,7 +16,7 @@ function ILvlCheck:GROUP_ROSTER_UPDATE()
         C_Timer.After(IsInRaid() and 2 or 0.5, function()
             ILvlCheck.rosterRefreshQueued = false
             if ILvlCheck.frame:IsShown() and not ILvlCheck.testMode then
-                ILvlCheck:RefreshPartyScan()
+                ILvlCheck:RefreshPartyScan(true)
             end
         end)
     end

@@ -14,10 +14,17 @@ ILvlCheck.pendingGUID = nil
 ILvlCheck.pendingKey = nil
 ILvlCheck.scanDelay = 0.4
 ILvlCheck.inspectTimeout = 3
+-- A failed inspect (no answer, or no item level yet) is tried again up to
+-- this many times, retryDelay seconds later; after that it's retried every
+-- retryAfterFail seconds while the window is open.
+ILvlCheck.inspectAttempts = {}
+ILvlCheck.maxInspectAttempts = 3
+ILvlCheck.retryDelay = 1.5
+ILvlCheck.retryAfterFail = 20
 ILvlCheck.thresholdAlerted = {}
 ILvlCheck.scanAnnounced = {}
 ILvlCheck.autoShowDelay = 1
-ILvlCheck.version = "1.4.0"
+ILvlCheck.version = "1.4.1"
 ILvlCheck.testMode = false
 ILvlCheck.visibleBuffs = {}
 

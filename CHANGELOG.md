@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+- **Scans don't get stuck in raids:** people standing right next to you could stay on "Scanning..." or "Not inspectable". A roster change (someone joining, zoning or being moved) started the whole scan again, so the people at the end of the list were never reached. Now people already scanned keep their result and only the rest are scanned.
+- **Failed inspects are tried again:** when the game doesn't answer (often because another addon inspected someone at the same time) or their gear hasn't loaded yet, Party iLvl Check tries again a moment later, up to 3 times, and then every 20 seconds while the window is open.
+- Scanning no longer empties Blizzard's inspect window when you have it open.
+
 ## 1.4.0
 
 - **Their best run in this dungeon:** each row shows the player's best key in the dungeon you're in, green when timed, orange when over time, or "none here". Outside a dungeon it uses your own keystone's dungeon, named at the top of the window.
