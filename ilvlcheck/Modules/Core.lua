@@ -24,7 +24,7 @@ ILvlCheck.retryAfterFail = 20
 ILvlCheck.thresholdAlerted = {}
 ILvlCheck.scanAnnounced = {}
 ILvlCheck.autoShowDelay = 1
-ILvlCheck.version = "1.4.1"
+ILvlCheck.version = "1.5.0"
 ILvlCheck.testMode = false
 ILvlCheck.visibleBuffs = {}
 
@@ -34,7 +34,7 @@ ns.STATUS_COLORS = {
     ["Out of range"] = { 0.95, 0.65, 0.30 },
 }
 
-ns.ROW_WIDTH = 464
+ns.ROW_WIDTH = 504
 ns.ROW_HEIGHT = 46
 ns.ROW_GAP = 8
 ns.ROWS_TOP_OFFSET = 138
@@ -43,7 +43,7 @@ ns.UTILITY_TOP_OFFSET = 102
 ns.UTILITY_ICON_SIZE = 22
 -- Raid mode's scrolling list fills the space the five party rows use.
 ns.RAID_AREA_HEIGHT = 286
-ns.BUFF_ICON_START_X = 158
+ns.BUFF_ICON_START_X = 178
 ns.BUFF_ICON_GAP = 4
 ns.BUFF_ICON_SIZE = 22
 ns.BUFF_RING_PADDING = 2
@@ -70,6 +70,9 @@ ns.BUFF_DEFINITIONS = {
     { key = "SKYFURY", label = "Skyfury", kind = "class", providerClass = "SHAMAN",
       spellIds = { 462854 }, icon = "achievement_raidprimalist_windelemental" },
     { key = "FOOD", label = "Well Fed", kind = "consumable", icon = "spell_misc_food",
+      -- Any buff whose name contains one of these (lower case) counts too:
+      -- "Well Fed", "Hearty Well Fed" and whatever a new food calls it.
+      patterns = { "well fed", "^hearty" },
       names = {
           -- Hearty is the reduced buff members get from a dropped feast they
           -- didn't personally cook/buy -- counts as "fed" for this tracker.

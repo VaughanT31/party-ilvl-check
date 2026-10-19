@@ -480,6 +480,10 @@ function ILvlCheck:RefreshPartyScan(keepResults)
     self:UpdateUI()
     self:CheckThresholdAlerts()
 
+    -- Other addon users answer with their own data, and anything they
+    -- inspect, so their rows fill in without inspecting them.
+    ns.Share:Hello()
+
     if #self.inspectQueue > 0 then
         self:ScheduleNextInspect(0.15)
     end
@@ -533,7 +537,11 @@ function ILvlCheck:INSPECT_READY(inspectGUID)
     -- Gear links are only readable until FinishPendingInspect clears the
     -- inspect, so the enchant/gem audit has to happen here.
     if itemLevel then
-        self:ApplyGearAudit(self.players[self.pendingKey], self:AuditGear(self.pendingUnit))
+        local audit = self:AuditGear(self.pendingUnit)
+        self:ApplyGearAudit(self.players[self.pendingKey], audit)
+        local entry = self.players[self.pendingKey]
+        if entry then entry.via = nil end
+        ns.Share:Relay(self.pendingUnit, itemLevel, self:GetInspectedSpecID(self.pendingUnit), audit)
         self:FinishPendingInspect("Ready", itemLevel)
     else
         self:FailPendingInspect()

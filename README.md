@@ -27,6 +27,8 @@ Players who were out of range are checked again automatically once they come clo
 
 **Tier set and Post.** The gear icon's tooltip shows each player's tier set pieces. *Post* sends a short summary (item levels, best runs here, missing utility, keys) to party or instance chat, or prints it for you when you're alone or in Test Mode.
 
+**Sharing (1.5).** Group members who also run Party iLvl Check send their own item level, spec and gear check, and share anyone they inspect, so the window fills in much faster, especially in raids. Shared data is only used for people in your group and never replaces your own inspects; nothing is sent during encounters or Mythic+.
+
 **Raid mode.** In a raid group the window shows everyone as compact rows in a scrolling list. It doesn't open by itself in raids; use `/ilvlcheck` or the minimap button. `/ilvlcheck testraid` shows a made-up raid.
 
 **Group finder applicants.** When you list a Mythic+ key, each applicant row shows their best run in your dungeon, and item levels under your Min iLvl turn orange.
@@ -45,7 +47,7 @@ Players who were out of range are checked again automatically once they come clo
 
 **Scan iLvl** prints each player's item level and score to chat as they are inspected.
 
-**Test Mode** fills the window with a made-up group, so you can see how it looks outside a dungeon.
+**Test M+** and **Test Raid** fill the window with a made-up five-player group or a made-up raid, so you can see how it looks outside a dungeon. Only one can be on at a time; click the ticked one again to turn it off.
 
 **Minimap button** opens the window. Drag it to move it around the minimap.
 
@@ -56,6 +58,7 @@ Players who were out of range are checked again automatically once they come clo
 | `/ilvlcheck` | Open or close the window |
 | `/ilvlcheck post` | Post the group summary to chat |
 | `/ilvlcheck testraid` | Show a made-up raid in raid mode |
+| `/ilvlcheck scale 0.8` | Window size, 0.5 to 2 (`scale reset` for normal); or drag the bottom-right corner |
 
 ## Install
 

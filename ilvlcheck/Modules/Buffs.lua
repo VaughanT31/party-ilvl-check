@@ -43,6 +43,17 @@ local function HasAuraBuff(unit, buffDef, auraNames)
         end
     end
 
+    if buffDef.patterns then
+        for name in pairs(auraNames) do
+            local lower = name:lower()
+            for _, pattern in ipairs(buffDef.patterns) do
+                if lower:find(pattern) then
+                    return true
+                end
+            end
+        end
+    end
+
     return false
 end
 
@@ -62,7 +73,8 @@ function ILvlCheck:ScanEntryBuffs(entry)
                 break
             end
 
-            if aura.name then
+            -- Aura names can be secret values in restricted content; skip those.
+            if aura.name and not (issecretvalue and issecretvalue(aura.name)) then
                 auraNames[aura.name] = true
             end
         end

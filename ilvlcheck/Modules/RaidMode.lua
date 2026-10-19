@@ -133,7 +133,7 @@ function ILvlCheck:UpdateRaidRows()
         local entry = self.players[self.displayOrder[index]]
         local color = entry.classFile and RAID_CLASS_COLORS[entry.classFile]
         local r, g, b = color and color.r or 1, color and color.g or 1, color and color.b or 1
-        row.nameText:SetText(entry.displayName or "?")
+        row.nameText:SetText((entry.displayName or "?") .. ns.AddonMark(entry))
         row.nameText:SetTextColor(r, g, b)
         row.accent:SetVertexColor(r, g, b, 0.9)
         row.specText:SetText(entry.specName or "")
@@ -209,6 +209,7 @@ function ILvlCheck:GenerateTestRaid()
             classFile = mock.classFile, displayName = mock.name .. index, specName = mock.specName, specID = mock.specID,
             ilvl = (index % 6 == 0) and nil or minimum + math.random(-10, 20),
             status = (index % 6 == 0) and "Out of range" or "Ready",
+            hasAddon = index % 4 == 1,
             buffStatus = self:GenerateMockBuffStatus(),
         }
         self:ApplyGearAudit(self.players[key], self:GenerateMockGearAudit())

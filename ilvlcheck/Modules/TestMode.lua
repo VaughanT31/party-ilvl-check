@@ -78,6 +78,8 @@ function ILvlCheck:GenerateTestRoster()
                 mythicRating = (index == 2) and 0 or math.random(800, 3200),
                 ilvl = ilvl,
                 status = "Ready",
+                -- Two of them "have the addon", to show its mark.
+                hasAddon = index == 1 or index == 4,
                 buffStatus = self:GenerateMockBuffStatus(),
             }
             self:ApplyGearAudit(self.players[key], self:GenerateMockGearAudit())

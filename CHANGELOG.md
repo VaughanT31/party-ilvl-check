@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0
+
+- **Faster with friends:** when others in your group also run Party iLvl Check, they send you their own item level, spec, tier pieces and enchant and gem check straight away, so they don't need inspecting at all. Anyone one of you inspects is shared with the rest, so in a raid the group splits the inspecting instead of everyone inspecting all twenty. Hover a player's gear icon to see where their data came from.
+- Shared data is only used for people in your group, nobody can send data for someone else, and your own inspect results are never replaced. Nothing is sent during boss encounters or Mythic+ runs.
+- **See who has it:** a small Party iLvl Check icon follows the names of everyone in your group who has the addon (and yours), and the top of the window says how many of you have it.
+- The window is a little wider, so the item level on the right has room. Name, score and spec no longer run under the buff icons; the best run in this dungeon now sits on the spec line.
+- **Well Fed fixed:** food buffs now count whatever they're called, including *Hearty Well Fed* and plain *Well Fed*.
+- **Test M+ and Test Raid:** Test Mode is now two buttons that work like radio buttons. *Test M+* shows a made-up five-player group and *Test Raid* a made-up raid in raid mode. Click the ticked one again to leave test mode.
+- **Resizable window:** drag the grip in the bottom-right corner to make the window smaller or bigger (50% to 200%), or type `/ilvlcheck scale 0.8`. `/ilvlcheck scale reset` brings back the normal size. The size is remembered.
+
 ## 1.4.1
 
 - **Scans don't get stuck in raids:** people standing right next to you could stay on "Scanning..." or "Not inspectable". A roster change (someone joining, zoning or being moved) started the whole scan again, so the people at the end of the list were never reached. Now people already scanned keep their result and only the rest are scanned.

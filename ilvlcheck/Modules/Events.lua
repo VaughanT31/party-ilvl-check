@@ -106,21 +106,31 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
     ILvlCheckDB = ILvlCheckDB or {}
     self:CreateUI()
     self:CreateMinimapButton()
+    ns.Share:Init()
     self:HookGroupFinder()
 
     SLASH_ILVLCHECK1 = "/ilvlcheck"
     SlashCmdList.ILVLCHECK = function(msg)
         msg = (msg or ""):lower():match("^%s*(.-)%s*$")
         if msg == "testraid" or msg == "test raid" then
-            ILvlCheck.testMode, ILvlCheck.testRaid = true, true
             if not ILvlCheck.frame:IsShown() then
+                ILvlCheck.testMode, ILvlCheck.testRaid = true, true
                 ILvlCheck.frame:Show()
             else
-                ILvlCheck:RefreshPartyScan()
+                ILvlCheck:SetTestMode("raid")
             end
             return
         elseif msg == "post" then
             ILvlCheck:PostSummary()
+            return
+        elseif msg:match("^scale") then
+            local value = msg:match("^scale%s+(%S+)")
+            if value == "reset" then
+                ILvlCheck:SetWindowScale(1)
+            elseif tonumber(value) then
+                ILvlCheck:SetWindowScale(tonumber(value))
+            end
+            print(string.format("|cff66ccffParty iLvl Check:|r window size %d%%. /ilvlcheck scale 0.8, or drag the corner (scale reset for normal).", math.floor(ILvlCheck:GetWindowScale() * 100 + 0.5)))
             return
         end
         ILvlCheck:ToggleWindow()
@@ -130,6 +140,16 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
     self:RegisterEvent("INSPECT_READY")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("CHALLENGE_MODE_START")
+    self:RegisterEvent("CHAT_MSG_ADDON")
+    self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+end
+
+function ILvlCheck:CHAT_MSG_ADDON(prefix, message, channel, sender)
+    ns.Share:OnMessage(prefix, message, channel, sender)
+end
+
+function ILvlCheck:PLAYER_EQUIPMENT_CHANGED()
+    ns.Share:GearChanged()
 end
 
 ILvlCheck:SetScript("OnEvent", function(self, event, ...)

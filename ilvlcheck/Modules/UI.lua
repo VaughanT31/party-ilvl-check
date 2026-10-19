@@ -33,6 +33,11 @@ function ILvlCheck:AddGearTooltipLines(audit)
         GameTooltip:AddLine("Not checked yet", 0.62, 0.62, 0.66)
         return
     end
+    if audit.sharedBy == "self" then
+        GameTooltip:AddLine("Sent by their own Party iLvl Check", 0.40, 0.80, 1.00)
+    elseif audit.sharedBy then
+        GameTooltip:AddLine("Inspected by " .. audit.sharedBy .. " (Party iLvl Check)", 0.40, 0.80, 1.00)
+    end
 
     if audit.tierPieces then
         local pieces = audit.tierPieces
@@ -72,17 +77,22 @@ function ILvlCheck:CreateRow(parent, index)
     row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.nameText:SetPoint("TOPLEFT", 12, -6)
     row.nameText:SetJustifyH("LEFT")
-    row.nameText:SetWidth(210)
+    -- The text stops before the buff icons start, so nothing runs under them.
+    local textWidth = BUFF_ICON_START_X - 16
+    row.nameText:SetWidth(textWidth)
+    row.nameText:SetWordWrap(false)
 
     row.scoreText = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     row.scoreText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -2)
     row.scoreText:SetJustifyH("LEFT")
-    row.scoreText:SetWidth(210)
+    row.scoreText:SetWidth(textWidth)
+    row.scoreText:SetWordWrap(false)
 
     row.specText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     row.specText:SetPoint("TOPLEFT", row.scoreText, "BOTTOMLEFT", 0, -3)
     row.specText:SetJustifyH("LEFT")
-    row.specText:SetWidth(180)
+    row.specText:SetWidth(textWidth)
+    row.specText:SetWordWrap(false)
     row.specText:SetTextColor(0.65, 0.65, 0.70)
 
     row.buffIcons = {}
@@ -207,6 +217,71 @@ local function CreateFlatButton(parent, bgColor, text)
     return button
 end
 
+-- Window size (1.5): 50% to 200%, saved in ILvlCheckDB.scale. The whole
+-- window scales together, so the layout stays as designed.
+local MIN_SCALE, MAX_SCALE = 0.5, 2
+
+function ILvlCheck:GetWindowScale()
+    local scale = ILvlCheckDB and tonumber(ILvlCheckDB.scale) or 1
+    return math.min(MAX_SCALE, math.max(MIN_SCALE, scale))
+end
+
+-- Keeps the window's top-left corner where it is while it grows or shrinks.
+function ILvlCheck:SetWindowScale(scale)
+    scale = math.min(MAX_SCALE, math.max(MIN_SCALE, tonumber(scale) or 1))
+    ILvlCheckDB = ILvlCheckDB or {}
+    ILvlCheckDB.scale = scale
+    local frame = self.frame
+    if not frame then
+        return
+    end
+    local old = frame:GetScale()
+    local left, top = frame:GetLeft(), frame:GetTop()
+    frame:SetScale(scale)
+    if left and top then
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left * old / scale, top * old / scale)
+    end
+end
+
+-- The drag grip in the bottom-right corner.
+function ILvlCheck:CreateScaleGrip(frame)
+    local grip = CreateFrame("Button", nil, frame)
+    grip:SetSize(16, 16)
+    grip:SetPoint("BOTTOMRIGHT", -3, 3)
+    grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    grip:SetScript("OnMouseDown", function()
+        local cx, cy = GetCursorPosition()
+        local ui = UIParent:GetEffectiveScale()
+        local left, top = frame:GetLeft() * frame:GetEffectiveScale(), frame:GetTop() * frame:GetEffectiveScale()
+        local startDistance = math.max(1, math.sqrt((cx - left) ^ 2 + (top - cy) ^ 2))
+        local startScale = frame:GetScale()
+        grip:SetScript("OnUpdate", function()
+            local x, y = GetCursorPosition()
+            local distance = math.sqrt((x - left) ^ 2 + (top - y) ^ 2)
+            local scale = math.min(MAX_SCALE, math.max(MIN_SCALE, startScale * distance / startDistance))
+            frame:SetScale(scale)
+            frame:ClearAllPoints()
+            frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left / (scale * ui), top / (scale * ui))
+        end)
+    end)
+    grip:SetScript("OnMouseUp", function()
+        grip:SetScript("OnUpdate", nil)
+        ILvlCheckDB = ILvlCheckDB or {}
+        ILvlCheckDB.scale = frame:GetScale()
+    end)
+    grip:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(grip, "ANCHOR_RIGHT")
+        GameTooltip:AddLine("Drag to resize")
+        GameTooltip:AddLine("/ilvlcheck scale reset for the normal size", 0.7, 0.7, 0.7)
+        GameTooltip:Show()
+    end)
+    grip:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.scaleGrip = grip
+end
+
 function ILvlCheck:CreateUI()
     if self.frame then
         return
@@ -230,6 +305,9 @@ function ILvlCheck:CreateUI()
     frame:SetBackdropColor(0.07, 0.075, 0.09, 0.97)
     frame:SetBackdropBorderColor(1, 1, 1, 0.08)
     frame:Hide()
+    self.frame = frame
+    frame:SetScale(self:GetWindowScale())
+    self:CreateScaleGrip(frame)
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     title:SetPoint("TOPLEFT", 16, -14)
@@ -334,25 +412,20 @@ function ILvlCheck:CreateUI()
     announceCheck.Text:SetText("Scan iLvl")
     frame.announceCheck = announceCheck
 
-    local testModeCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-    testModeCheck:SetPoint("LEFT", announceCheck.Text, "RIGHT", 8, 0)
-    testModeCheck:SetChecked(false)
-    testModeCheck:SetScript("OnClick", function(checkButton)
-        ILvlCheck.testMode = checkButton:GetChecked() and true or false
-        ILvlCheck.testRaid = false
-
-        if ILvlCheck.testMode then
-            ILvlCheck:StopBuffPolling()
-        end
-
-        ILvlCheck:RefreshPartyScan()
-
-        if not ILvlCheck.testMode and ILvlCheck.frame and ILvlCheck.frame:IsShown() then
-            ILvlCheck:StartBuffPolling()
-        end
-    end)
-    testModeCheck.Text:SetText("Test Mode")
-    frame.testModeCheck = testModeCheck
+    -- Test M+ and Test Raid work like radio buttons: one or the other, or
+    -- click the ticked one again to leave test mode.
+    local function TestButton(anchor, label, raid)
+        local check = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+        check:SetPoint("LEFT", anchor, "RIGHT", 8, 0)
+        check:SetChecked(false)
+        check:SetScript("OnClick", function(checkButton)
+            ILvlCheck:SetTestMode(checkButton:GetChecked() and (raid and "raid" or "party") or nil)
+        end)
+        check.Text:SetText(label)
+        return check
+    end
+    frame.testModeCheck = TestButton(announceCheck.Text, "Test M+", false)
+    frame.testRaidCheck = TestButton(frame.testModeCheck.Text, "Test Raid", true)
 
     for index = 1, 5 do
         self.rowPool[index] = self:CreateRow(frame, index)
@@ -373,9 +446,7 @@ function ILvlCheck:CreateUI()
             ILvlCheck.frame.announceCheck:SetChecked(ShouldShowScanAnnouncements())
         end
 
-        if ILvlCheck.frame.testModeCheck then
-            ILvlCheck.frame.testModeCheck:SetChecked(ILvlCheck.testMode)
-        end
+        ILvlCheck:SyncTestButtons()
 
         ILvlCheck:RefreshPartyScan()
         ILvlCheck:StartBuffPolling()
@@ -401,7 +472,7 @@ function ILvlCheck:UpdateUI()
         self:UpdateRaidRows()
         self:UpdateSummary()
         self:UpdateUtilityBar()
-        self.frame.dungeonText:SetText(("%d players"):format(#self.displayOrder))
+        self.frame.dungeonText:SetText(("%d players"):format(#self.displayOrder) .. ns.AddonCountText(self))
         return
     end
 
@@ -417,7 +488,7 @@ function ILvlCheck:UpdateUI()
                 nr, ng, nb = classColor.r, classColor.g, classColor.b
             end
             row.nameText:SetTextColor(nr, ng, nb)
-            row.nameText:SetText(entry.displayName or key)
+            row.nameText:SetText((entry.displayName or key) .. ns.AddonMark(entry))
 
             if entry.ilvl then
                 row.bg:Show()
@@ -432,18 +503,17 @@ function ILvlCheck:UpdateUI()
                         row.scoreText:SetTextColor(0.70, 0.82, 1.00)
                     end
 
-                    local here = ns.FormatDungeonRun(entry.dungeonRun)
-                    row.scoreText:SetText("M+ Score: " .. tostring(entry.mythicRating) .. (here and ("  |cff5a5a62|||r  " .. here) or ""))
-                    row.scoreText:Show()
-                elseif ns.FormatDungeonRun(entry.dungeonRun) then
-                    row.scoreText:SetTextColor(0.70, 0.82, 1.00)
-                    row.scoreText:SetText(ns.FormatDungeonRun(entry.dungeonRun))
+                    row.scoreText:SetText("M+ Score: " .. tostring(entry.mythicRating))
                     row.scoreText:Show()
                 else
-                    row.scoreText:Hide()
+                    row.scoreText:SetTextColor(0.70, 0.82, 1.00)
+                    row.scoreText:SetText("M+ Score: -")
+                    row.scoreText:Show()
                 end
 
-                row.specText:SetText(entry.specName or "-")
+                -- Their best run here goes on the spec line, which has room for it.
+                local here = ns.FormatDungeonRun(entry.dungeonRun)
+                row.specText:SetText((entry.specName or "-") .. (here and ("  |cff5a5a62|||r  " .. here) or ""))
                 row.specText:Show()
 
                 local minimum = GetMinimumItemLevel()
@@ -531,7 +601,7 @@ function ILvlCheck:UpdateUI()
     self:UpdateSummary()
     self:UpdateUtilityBar()
     if self.frame.dungeonText then
-        self.frame.dungeonText:SetText(self.dungeonName and ("Best runs in " .. self.dungeonName) or "")
+        self.frame.dungeonText:SetText((self.dungeonName and ("Best runs in " .. self.dungeonName) or "") .. ns.AddonCountText(self))
     end
 end
 
@@ -736,5 +806,27 @@ function ILvlCheck:LayoutSummaryTiles(showAll)
         tiles[3]:SetWidth(tileWidth)
         tiles[1]:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 18, -52)
         tiles[3]:SetPoint("LEFT", tiles[1], "RIGHT", gap, 0)
+    end
+end
+
+-- mode: "party", "raid" or nil (test mode off).
+function ILvlCheck:SetTestMode(mode)
+    self.testMode = mode ~= nil
+    self.testRaid = mode == "raid"
+    self:SyncTestButtons()
+    if self.testMode then
+        self:StopBuffPolling()
+    end
+    self:RefreshPartyScan()
+    if not self.testMode and self.frame and self.frame:IsShown() then
+        self:StartBuffPolling()
+    end
+end
+
+function ILvlCheck:SyncTestButtons()
+    local frame = self.frame
+    if frame and frame.testModeCheck then
+        frame.testModeCheck:SetChecked(self.testMode and not self.testRaid)
+        frame.testRaidCheck:SetChecked(self.testMode and self.testRaid)
     end
 end
