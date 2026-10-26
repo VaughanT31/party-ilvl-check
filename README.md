@@ -2,6 +2,8 @@
 
 A World of Warcraft addon that shows your party's item levels, Mythic+ scores, buffs and gear checks the moment you zone into a dungeon.
 
+**New here?** The [wiki](wiki/Home.md) explains every feature step by step (also on the [website](https://ctrlshiftzed.com/wiki/party-ilvl-check/)). Questions it doesn't answer: ask on [Discord](https://discord.gg/wz7fw6jM9Z).
+
 - **Game:** Retail, Midnight (12.x)
 - **Interface:** `120100`
 - **CurseForge:** [Party iLvl Check](https://www.curseforge.com/wow/addons/party-item-level-checker)
