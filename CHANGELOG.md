@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.0
+
+- **A small window on the ready check:** when a ready check starts, a compact window pops up instead of the full one: one line per player with their ready check icon (ready, not ready or still waiting), item level (orange when under your minimum) and only what's missing, plus who's ready, your durability and any group utility nobody brings. Click it for the full window.
+- **It gets out of the way:** it fades out a few seconds after the ready check ends. A pull timer (`/pull`, `/countdown`, or an addon's pull timer) hides it at once, and it stays away for the pull and the fight.
+- **Put it where you like:** drag it anywhere, and it stays there. The **Test Mini** button in the full window (or `/ilvlcheck mini`) shows it so you can place it, `/ilvlcheck mini reset` puts it back.
+- **Raids:** off by default. `/ilvlcheck raidpopup on` turns it on, and a raid lists only the people who aren't ready or are missing something.
+- **The full window** shows the ready check icons too, and its top line counts who's ready.
+- **Prefer the old way?** `/ilvlcheck popup dungeon` opens the full window entering a dungeon again, `popup both` does both and `popup off` leaves it to you. `/ilvlcheck popup` says which is on.
+- **Your durability:** shown at the top of both windows, your gear's average, green, amber under 50% and red under 20%. The game only shares durability for your own character.
+- **Augment runes:** a new icon in the buff strip shows who has an augment rune active. Not many people use them, so a missing rune shows grey, never red.
+- **Test M+ and Test Raid** give the made-up players ready check icons too, so you can see how both windows look.
+
 ## 1.5.0
 
 - **Faster with friends:** when others in your group also run Party iLvl Check, they send you their own item level, spec, tier pieces and enchant and gem check straight away, so they don't need inspecting at all. Anyone one of you inspects is shared with the rest, so in a raid the group splits the inspecting instead of everyone inspecting all twenty. Hover a player's gear icon to see where their data came from.

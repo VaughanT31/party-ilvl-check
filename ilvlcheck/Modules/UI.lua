@@ -112,6 +112,8 @@ function ILvlCheck:CreateRow(parent, index)
                 ILvlCheck:AddGearTooltipLines(self.gearAudit)
             elseif self.hasBuff then
                 GameTooltip:AddLine("Active", 0.30, 0.85, 0.35)
+            elseif self.buffDef.optional then
+                GameTooltip:AddLine("Not used (optional)", 0.65, 0.65, 0.70)
             else
                 GameTooltip:AddLine("Missing", 0.90, 0.20, 0.20)
             end
@@ -369,6 +371,24 @@ function ILvlCheck:CreateUI()
     postButton:HookScript("OnLeave", function() GameTooltip:Hide() end)
     frame.postButton = postButton
 
+    -- Shows the ready check window (Mini.lua) for 30 seconds, to see it and
+    -- drag it into place.
+    local miniButton = CreateFlatButton(frame, { 0.20, 0.20, 0.24 }, "Test Mini")
+    miniButton:SetSize(90, 26)
+    miniButton:SetPoint("RIGHT", refreshButton, "LEFT", -10, 0)
+    miniButton.label:SetTextColor(0.85, 0.85, 0.90)
+    miniButton:SetScript("OnClick", function()
+        ILvlCheck:ShowMini(30)
+    end)
+    miniButton:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText("Test the ready check window")
+        GameTooltip:AddLine("Shows the small window that pops up on a ready check, for 30 seconds. Drag it where you want it.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    miniButton:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.miniButton = miniButton
+
     local minLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     minLabel:SetPoint("BOTTOMLEFT", 20, 90)
     minLabel:SetText("Min iLvl")
@@ -453,7 +473,11 @@ function ILvlCheck:CreateUI()
     end)
 
     frame:SetScript("OnHide", function()
-        ILvlCheck:StopBuffPolling()
+        -- The mini window may still be up and need the polls.
+        if not ILvlCheck:IsMiniShown() then
+            ILvlCheck:StopBuffPolling()
+            ILvlCheck:ForgetReadyCheck()
+        end
     end)
 
     self.frame = frame
@@ -472,7 +496,7 @@ function ILvlCheck:UpdateUI()
         self:UpdateRaidRows()
         self:UpdateSummary()
         self:UpdateUtilityBar()
-        self.frame.dungeonText:SetText(("%d players"):format(#self.displayOrder) .. ns.AddonCountText(self))
+        self.frame.dungeonText:SetText(ns.HeaderText(self, ("%d players"):format(#self.displayOrder)) .. ns.AddonCountText(self))
         return
     end
 
@@ -488,7 +512,7 @@ function ILvlCheck:UpdateUI()
                 nr, ng, nb = classColor.r, classColor.g, classColor.b
             end
             row.nameText:SetTextColor(nr, ng, nb)
-            row.nameText:SetText((entry.displayName or key) .. ns.AddonMark(entry))
+            row.nameText:SetText(ns.ReadyIcon(self, entry) .. (entry.displayName or key) .. ns.AddonMark(entry))
 
             if entry.ilvl then
                 row.bg:Show()
@@ -550,7 +574,7 @@ function ILvlCheck:UpdateUI()
                         local hasBuff = status == true
                         holder.icon:SetTexture(buffDef.iconPath)
                         holder.icon:SetDesaturated(not hasBuff)
-                        if status == nil and buffDef.kind == "gear" then
+                        if (status == nil and buffDef.kind == "gear") or (buffDef.optional and not hasBuff) then
                             holder.ring:SetVertexColor(0.45, 0.45, 0.50, 1)
                         elseif hasBuff then
                             holder.ring:SetVertexColor(0.30, 0.85, 0.35, 1)
@@ -601,7 +625,7 @@ function ILvlCheck:UpdateUI()
     self:UpdateSummary()
     self:UpdateUtilityBar()
     if self.frame.dungeonText then
-        self.frame.dungeonText:SetText((self.dungeonName and ("Best runs in " .. self.dungeonName) or "") .. ns.AddonCountText(self))
+        self.frame.dungeonText:SetText(ns.HeaderText(self, self.dungeonName and ("Best runs in " .. self.dungeonName) or "") .. ns.AddonCountText(self))
     end
 end
 

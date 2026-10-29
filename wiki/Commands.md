@@ -6,6 +6,9 @@
 |---|---|
 | `/ilvlcheck` | Open or close the window |
 | `/ilvlcheck post` | Post the group summary to chat |
+| `/ilvlcheck popup dungeon` | When it opens by itself: `readycheck` (default), `dungeon`, `both` or `off` |
+| `/ilvlcheck mini` | Show the ready check window to drag it into place (`mini reset` puts it back) |
+| `/ilvlcheck raidpopup on` | The ready check window in raids (`off` by default) |
 | `/ilvlcheck testraid` | Show a made-up raid in raid mode |
 | `/ilvlcheck scale 0.8` | Window size from 0.5 to 2 (`scale reset` for normal) |
 

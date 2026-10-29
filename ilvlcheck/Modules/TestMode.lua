@@ -18,6 +18,7 @@ function ILvlCheck:GenerateTestRoster()
     if playerEntry then
         playerEntry.specName = self:GetPlayerSpecName()
         playerEntry.buffStatus = self:GenerateMockBuffStatus()
+        playerEntry.testReady = "ready"
         playerEntry.dungeonRun = { level = math.random(8, 16), timed = true }
         playerEntry.testKeystone = { level = math.random(10, 16), mapID = nil }
         self:ApplyGearAudit(playerEntry, self:GenerateMockGearAudit())
@@ -81,6 +82,7 @@ function ILvlCheck:GenerateTestRoster()
                 -- Two of them "have the addon", to show its mark.
                 hasAddon = index == 1 or index == 4,
                 buffStatus = self:GenerateMockBuffStatus(),
+                testReady = ns.MockReadyStatus(),
             }
             self:ApplyGearAudit(self.players[key], self:GenerateMockGearAudit())
             self.displayOrder[#self.displayOrder + 1] = key

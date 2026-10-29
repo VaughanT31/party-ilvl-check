@@ -112,7 +112,7 @@ function ILvlCheck:StopBuffPolling()
 end
 
 function ILvlCheck:RescanBuffs()
-    if self.testMode or not self.frame or not self.frame:IsShown() then
+    if self.testMode or not self.frame or not self:IsDisplaying() then
         return
     end
 

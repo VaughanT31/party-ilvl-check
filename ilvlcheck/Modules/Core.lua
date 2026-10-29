@@ -24,7 +24,7 @@ ILvlCheck.retryAfterFail = 20
 ILvlCheck.thresholdAlerted = {}
 ILvlCheck.scanAnnounced = {}
 ILvlCheck.autoShowDelay = 1
-ILvlCheck.version = "1.5.0"
+ILvlCheck.version = "1.6.0"
 ILvlCheck.testMode = false
 ILvlCheck.visibleBuffs = {}
 
@@ -53,9 +53,9 @@ ns.BUFF_RING_PADDING = 2
 -- season. Update the `names` lists in-game each season by right-clicking
 -- the buff icon on your own buff bar to read its name, or by cross-checking
 -- a current consumables guide (this list was seeded from Method's Midnight
--- 12.1 consumables guide). No Phial or Augment Rune tracked this patch:
--- Phials are too situational to flag as "missing," and Midnight doesn't
--- have an Augment Rune equivalent yet -- add rows back if that changes.
+-- 12.1 consumables guide). No Phial tracked: too situational to flag as
+-- "missing". Augment runes (1.6) match any buff named "... Augment Rune"
+-- and are optional: grey when unused, never red.
 ns.BUFF_DEFINITIONS = {
     { key = "MOTW", label = "Mark of the Wild", kind = "class", providerClass = "DRUID",
       spellIds = { 1126 }, icon = "spell_nature_regeneration" },
@@ -98,6 +98,8 @@ ns.BUFF_DEFINITIONS = {
           "Flask of Thalassian Resistance", "Flask of the Blood Knights", "Flask of the Magisters",
           "Flask of the Shattered Sun", "Vicious Thalassian Flask of Honor",
       } },
+    { key = "AUGMENT", label = "Augment Rune", kind = "consumable", optional = true,
+      icon = "inv_misc_rune_09", patterns = { "augment rune" } },
     -- Temporary weapon enchant (oil / whetstone). Only readable for yourself,
     -- other players' temporary enchants aren't exposed, so their slot is blank.
     { key = "WEAPON_OIL", label = "Weapon Oil", kind = "weapon", icon = "inv_misc_potionsetc",

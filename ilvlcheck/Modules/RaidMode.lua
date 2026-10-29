@@ -6,8 +6,8 @@ local ILvlCheck = ns.ILvlCheck
 -- Same data: item level against your minimum, spec, the buff and gear icons.
 -- The inspect queue already goes one player at a time, so a raid fills in
 -- over a minute or so; out of range players are retried as they come close.
--- Raid mode never opens the window by itself: use /ilvlcheck or the minimap
--- button.
+-- In a raid the window opens by itself only on a ready check (1.6), or
+-- with /ilvlcheck or the minimap button.
 
 local RAID_ROW_HEIGHT = 20
 local RAID_ROW_GAP = 2
@@ -79,6 +79,8 @@ local function CreateRaidRow(parent)
                 ILvlCheck:AddGearTooltipLines(self.gearAudit)
             elseif self.hasBuff then
                 GameTooltip:AddLine("Active", 0.30, 0.85, 0.35)
+            elseif self.buffDef.optional then
+                GameTooltip:AddLine("Not used (optional)", 0.65, 0.65, 0.70)
             else
                 GameTooltip:AddLine("Missing", 0.90, 0.20, 0.20)
             end
@@ -133,7 +135,7 @@ function ILvlCheck:UpdateRaidRows()
         local entry = self.players[self.displayOrder[index]]
         local color = entry.classFile and RAID_CLASS_COLORS[entry.classFile]
         local r, g, b = color and color.r or 1, color and color.g or 1, color and color.b or 1
-        row.nameText:SetText((entry.displayName or "?") .. ns.AddonMark(entry))
+        row.nameText:SetText(ns.ReadyIcon(self, entry) .. (entry.displayName or "?") .. ns.AddonMark(entry))
         row.nameText:SetTextColor(r, g, b)
         row.accent:SetVertexColor(r, g, b, 0.9)
         row.specText:SetText(entry.specName or "")
@@ -159,7 +161,7 @@ function ILvlCheck:UpdateRaidRows()
                 local status = entry.buffStatus and entry.buffStatus[buffDef.key]
                 icon.texture:SetTexture(buffDef.iconPath)
                 icon.texture:SetDesaturated(status ~= true)
-                if status == nil and buffDef.kind == "gear" then
+                if (status == nil and buffDef.kind == "gear") or (buffDef.optional and status ~= true) then
                     icon.border:SetVertexColor(0.45, 0.45, 0.50, 1)
                 elseif status == true then
                     icon.border:SetVertexColor(0.30, 0.85, 0.35, 1)
@@ -211,6 +213,7 @@ function ILvlCheck:GenerateTestRaid()
             status = (index % 6 == 0) and "Out of range" or "Ready",
             hasAddon = index % 4 == 1,
             buffStatus = self:GenerateMockBuffStatus(),
+            testReady = ns.MockReadyStatus(),
         }
         self:ApplyGearAudit(self.players[key], self:GenerateMockGearAudit())
         self.displayOrder[#self.displayOrder + 1] = key

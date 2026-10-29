@@ -6,10 +6,10 @@ Also on the website: [Party iLvl Check wiki](https://ctrlshiftzed.com/wiki/party
 
 ## Pages
 
-- [Getting started](Getting-started.md): Install it and walk into a dungeon: the window opens and checks everyone.
+- [Getting started](Getting-started.md): Install it, and the window opens on the next ready check and checks everyone.
 - [Reading the window](Reading-the-window.md): What each player's row shows, the summary tiles and the minimum item level.
 - [Group utility and keys](Group-utility-and-keys.md): Interrupts, dispels, battle res and Bloodlust for the whole group, and everyone's keystones.
-- [Buffs and gear checks](Buffs-and-gear-checks.md): The ring of icons on each row: class buffs, food, flask, weapon oil, enchants and gems.
+- [Buffs and gear checks](Buffs-and-gear-checks.md): The ring of icons on each row: class buffs, food, flask, augment rune, weapon oil, enchants and gems.
 - [Raids and group finder](Raids-and-group-finder.md): Raid mode for big groups, and checking applicants when you list a key.
 - [Sharing with friends](Sharing-with-friends.md): Group members who also run Party iLvl Check fill in your window much faster.
 - [Window, size and test mode](Window-size-and-test-mode.md): Moving and resizing the window, the minimap button, and trying it out of a dungeon.

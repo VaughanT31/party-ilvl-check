@@ -11,19 +11,23 @@ function ILvlCheck:GROUP_ROSTER_UPDATE()
 
     -- Raids fire this constantly (subgroup moves, people zoning), and every
     -- rescan starts the inspect queue again, so wait for it to settle.
-    if self.frame and self.frame:IsShown() and not self.rosterRefreshQueued then
+    if self.frame and self:IsDisplaying() and not self.rosterRefreshQueued then
         self.rosterRefreshQueued = true
         C_Timer.After(IsInRaid() and 2 or 0.5, function()
             ILvlCheck.rosterRefreshQueued = false
-            if ILvlCheck.frame:IsShown() and not ILvlCheck.testMode then
+            if ILvlCheck:IsDisplaying() and not ILvlCheck.testMode then
                 ILvlCheck:RefreshPartyScan(true)
             end
         end)
     end
 end
 
+-- Entering a dungeon only opens the window when the popup setting says so
+-- (1.6: ready checks by default, Modules/ReadyCheck.lua).
 function ILvlCheck:PLAYER_ENTERING_WORLD()
-    self:AutoShowForPartyInstance(true)
+    if ns.PopsUpInDungeons() then
+        self:AutoShowForPartyInstance(true)
+    end
 end
 
 function ILvlCheck:IsFivePlayerPartyInstance()
@@ -42,6 +46,7 @@ end
 
 function ILvlCheck:HideForActiveKeystone()
     self:CancelActiveScan()
+    self:HideMini(true)
 
     if self.frame and self.frame:IsShown() then
         self.frame:Hide()
@@ -120,6 +125,30 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
                 ILvlCheck:SetTestMode("raid")
             end
             return
+        elseif msg == "mini" then
+            ILvlCheck:ShowMini(30)
+            print("|cff66ccffParty iLvl Check:|r here's the ready check window: drag it where you want it. It fades out in 30 seconds. /ilvlcheck mini reset puts it back.")
+            return
+        elseif msg == "mini reset" then
+            ILvlCheck:ResetMiniPosition()
+            print("|cff66ccffParty iLvl Check:|r the ready check window is back in its normal spot.")
+            return
+        elseif msg:match("^raidpopup") then
+            local value = msg:match("^raidpopup%s+(%S+)")
+            if value == "on" or value == "off" then
+                ns.SetMiniInRaid(value == "on")
+            end
+            print(("|cff66ccffParty iLvl Check:|r the ready check window %s in raids. /ilvlcheck raidpopup on or off."):format(ns.MiniInRaid() and "pops up" or "doesn't pop up"))
+            return
+        elseif msg:match("^popup") then
+            local mode = msg:match("^popup%s+(%S+)")
+            if mode == "ready" then mode = "readycheck" end
+            if mode and not ns.SetPopupMode(mode) then
+                mode = nil
+            end
+            local labels = { readycheck = "on a ready check", dungeon = "entering a dungeon", both = "on a ready check and entering a dungeon", off = "never (open it yourself)" }
+            print(("|cff66ccffParty iLvl Check:|r opens by itself %s. /ilvlcheck popup readycheck, dungeon, both or off."):format(labels[ns.GetPopupMode()]))
+            return
         elseif msg == "post" then
             ILvlCheck:PostSummary()
             return
@@ -140,12 +169,25 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
     self:RegisterEvent("INSPECT_READY")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("CHALLENGE_MODE_START")
+    self:RegisterEvent("READY_CHECK")
+    self:RegisterEvent("READY_CHECK_CONFIRM")
+    self:RegisterEvent("READY_CHECK_FINISHED")
+    self:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+    self:RegisterEvent("START_PLAYER_COUNTDOWN")
+    self:RegisterEvent("CANCEL_PLAYER_COUNTDOWN")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("CHAT_MSG_ADDON")
     self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 end
 
 function ILvlCheck:CHAT_MSG_ADDON(prefix, message, channel, sender)
     ns.Share:OnMessage(prefix, message, channel, sender)
+end
+
+function ILvlCheck:UPDATE_INVENTORY_DURABILITY()
+    if self:IsDisplaying() then
+        self:UpdateUI()
+    end
 end
 
 function ILvlCheck:PLAYER_EQUIPMENT_CHANGED()
