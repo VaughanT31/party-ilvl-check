@@ -53,10 +53,6 @@ function ILvlCheck:HideForActiveKeystone()
     end
 end
 
-function ILvlCheck:CHALLENGE_MODE_START()
-    self:HideForActiveKeystone()
-end
-
 function ILvlCheck:AutoShowForPartyInstance(fromEnteringWorld)
 
     local function showAndScan()
@@ -149,6 +145,9 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
             local labels = { readycheck = "on a ready check", dungeon = "entering a dungeon", both = "on a ready check and entering a dungeon", off = "never (open it yourself)" }
             print(("|cff66ccffParty iLvl Check:|r opens by itself %s. /ilvlcheck popup readycheck, dungeon, both or off."):format(labels[ns.GetPopupMode()]))
             return
+        elseif msg == "runs" or msg:match("^runs%s") then
+            ILvlCheck:RunsCommand(msg:match("^runs%s+(.*)$"))
+            return
         elseif msg == "post" then
             ILvlCheck:PostSummary()
             return
@@ -169,6 +168,7 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
     self:RegisterEvent("INSPECT_READY")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("CHALLENGE_MODE_START")
+    self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     self:RegisterEvent("READY_CHECK")
     self:RegisterEvent("READY_CHECK_CONFIRM")
     self:RegisterEvent("READY_CHECK_FINISHED")

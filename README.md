@@ -35,6 +35,8 @@ Players who were out of range are checked again automatically once they come clo
 
 **Group finder applicants.** When you list a Mythic+ key, each applicant row shows their best run in your dungeon, and item levels under your Min iLvl turn orange.
 
+**Ran with before.** Every key you finish is remembered on your own computer, so rows show `2 timed, 1 over` for players you know and applicants show `ran 3x`. `/ilvlcheck runs` lists your latest runs, `runs min 10` only remembers keys from +10 up, `runs max 500` changes the limit (1000 to start with) and `runs clear` forgets everything.
+
 **Buff strip.** Each row has a ring of icons, green when active and red when missing. Hover one to see which it is.
 
 | Icon | Checks |

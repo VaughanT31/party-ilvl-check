@@ -25,6 +25,15 @@ The tiles at the top count who is **ready**, who is **below your minimum** and w
 - **Scan iLvl** prints each player's item level and score to chat as they're inspected.
 - **Post** sends a short summary to party or instance chat: item levels, best runs here, missing utility and keys. Alone or in Test Mode it's printed just for you. `/ilvlcheck post` does the same.
 
+### Ran with before
+
+Every Mythic+ key you finish is remembered on your own computer. A player you've run with shows it on their row, such as *2 timed, 1 over*. List a key and applicants you know show *ran 3x*, with the split and the last date in their tooltip.
+
+- `/ilvlcheck runs` shows your latest runs and how many are kept
+- `/ilvlcheck runs min 10` only remembers keys from +10 up
+- `/ilvlcheck runs max 500` changes how many are kept (1000 to start with, oldest dropped first)
+- `/ilvlcheck runs clear` forgets everything
+
 ---
 
 Previous: [Getting started](Getting-started.md) | [Wiki home](Home.md) | Next: [Group utility and keys](Group-utility-and-keys.md)

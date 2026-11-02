@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- **Ran with before:** every Mythic+ key you finish is remembered, so you can see who you've run with and how it went. A player's row in the window shows *2 timed, 1 over*, and when you list a key, applicants you know show *ran 3x*, with the split and the last date in their tooltip.
+- **You choose how much:** it keeps your latest 1000 runs, on your own computer, and drops the oldest first. `/ilvlcheck runs` shows your latest runs, `runs min 10` only remembers keys from +10 up, `runs max 500` changes the limit and `runs clear` forgets everything.
+
 ## 1.6.0
 
 - **A small window on the ready check:** when a ready check starts, a compact window pops up instead of the full one: one line per player with their ready check icon (ready, not ready or still waiting), item level (orange when under your minimum) and only what's missing, plus who's ready, your durability and any group utility nobody brings. Click it for the full window.

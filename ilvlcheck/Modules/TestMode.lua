@@ -74,6 +74,8 @@ function ILvlCheck:GenerateTestRoster()
                 specID = mock.specID,
                 -- One with no run here, one over time, the rest timed.
                 dungeonRun = (index == 1) and false or { level = math.random(6, 18), timed = index ~= 3 },
+                -- One you've run with before.
+                testRanWith = (index == 2) and { timed = 2, over = 1 } or nil,
                 -- One without a key, one unknown (no LibKeystone), the rest with keys.
                 testKeystone = (index == 2) and false or (index == 4) and nil or { level = math.random(6, 18), mapID = nil },
                 mythicRating = (index == 2) and 0 or math.random(800, 3200),

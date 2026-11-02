@@ -32,12 +32,24 @@ local function BestRunText(appID, memberIdx, activityID)
     return ("|cfff2a64d+%d|r"):format(info.bestRunLevel)
 end
 
+-- Runs you've done with this applicant (Modules/History.lua), or nil.
+local function ApplicantHistory(appID, memberIdx)
+    if not C_LFGList.GetApplicantMemberInfo then
+        return nil
+    end
+    return ns.History.With((C_LFGList.GetApplicantMemberInfo(appID, memberIdx)))
+end
+
 local function UpdateMember(member, appID, memberIdx)
     if not member or not appID or not memberIdx then
         return
     end
 
     local text = BestRunText(appID, memberIdx, ListedActivity())
+    local item = ApplicantHistory(appID, memberIdx)
+    if item then
+        text = (text and (text .. " ") or "") .. ("|cff66ccffran %dx|r"):format(item.timed + item.over)
+    end
     if text then
         if not member.ILvlCheckBest then
             member.ILvlCheckBest = member:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -72,6 +84,19 @@ local function Hook()
         -- Never let a problem here break Blizzard's applicant list.
         pcall(UpdateMember, member, appID, memberIdx)
     end)
+    if _G.LFGListApplicantMember_OnEnter then
+        hooksecurefunc("LFGListApplicantMember_OnEnter", function(member)
+            pcall(function()
+                local item = ApplicantHistory(member:GetParent().applicantID, member.memberIdx)
+                if item then
+                    GameTooltip:AddLine(" ")
+                    GameTooltip:AddLine("Ran with you: " .. ns.FormatRanWith(item))
+                    GameTooltip:AddLine("Last on " .. date("%d %b %Y", item.last), 0.7, 0.7, 0.7)
+                    GameTooltip:Show()
+                end
+            end)
+        end)
+    end
     hooked = true
     return true
 end

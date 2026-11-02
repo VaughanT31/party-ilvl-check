@@ -537,7 +537,9 @@ function ILvlCheck:UpdateUI()
 
                 -- Their best run here goes on the spec line, which has room for it.
                 local here = ns.FormatDungeonRun(entry.dungeonRun)
-                row.specText:SetText((entry.specName or "-") .. (here and ("  |cff5a5a62|||r  " .. here) or ""))
+                local ranWith = ns.FormatRanWith(entry.testRanWith or (entry.unit and not UnitIsUnit(entry.unit, "player") and ns.History.ForUnit(entry.unit)) or nil)
+                row.specText:SetText((entry.specName or "-") .. (here and ("  |cff5a5a62|||r  " .. here) or "")
+                    .. (ranWith and ("  |cff5a5a62|||r  " .. ranWith) or ""))
                 row.specText:Show()
 
                 local minimum = GetMinimumItemLevel()
