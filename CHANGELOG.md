@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.
+
 ## 1.7.0
 
 - **Ran with before:** every Mythic+ key you finish is remembered, so you can see who you've run with and how it went. A player's row in the window shows *2 timed, 1 over*, and when you list a key, applicants you know show *ran 3x*, with the split and the last date in their tooltip.

@@ -2,7 +2,8 @@
 ## Title: Party iLvl Check
 ## Notes: Opens on a ready check with everyone's ready status, item level, buffs and gear, staying hidden during active Mythic+ timers.
 ## Author: CtrlShiftZed
-## Version: 1.7.0
+## Version: 1.7.1
+## X-Curse-Project-ID: 1527067
 ## Category: CtrlShift_Zed
 ## IconTexture: Interface\AddOns\ilvlcheck\icon
 ## SavedVariables: ILvlCheckDB
