@@ -13,7 +13,7 @@ Party iLvl Check shows who's ready, and your group's item levels, Mythic+ scores
 ### First use
 
 1. **Start or answer a ready check** in your party. A small window pops up and inspects everyone.
-2. Each line shows the player's ready check icon (ready, not ready or still waiting), item level (orange when under your minimum) and only what they're missing. The top says who's ready, your own gear's durability and any utility nobody brings.
+2. Each line shows the player's ready check icon (ready, not ready or still waiting), item level (orange when under your minimum) and only what they're missing. The top says who's ready, your own gear's durability and any utility nobody brings. A repair icon means that player's durability is under 20% (shared by their own Party iLvl Check).
 3. It fades out a few seconds after the ready check ends, and hides at once when a pull timer starts (`/pull`, `/countdown` or an addon's pull timer).
 4. Click it for the full window. See [Reading the window](Reading-the-window.md).
 5. Once a Mythic+ timer is running both windows stay hidden, so they never get in the way of a key.

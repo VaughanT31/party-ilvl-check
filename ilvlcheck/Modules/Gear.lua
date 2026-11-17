@@ -141,6 +141,14 @@ function ILvlCheck:ApplyGearAudit(entry, audit)
     end
 
     entry.gearAudit = audit
+    -- Durability rides on the gear check for its tooltip: shared (1.8), or your own.
+    if audit then
+        if entry.unit and UnitIsUnit(entry.unit, "player") then
+            audit.durability = ns.AverageDurability and ns.AverageDurability()
+        else
+            audit.durability = entry.durability
+        end
+    end
     entry.buffStatus = entry.buffStatus or {}
     if audit then
         entry.buffStatus.GEAR = #audit.missingEnchants == 0 and #audit.emptySockets == 0

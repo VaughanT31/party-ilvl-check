@@ -39,6 +39,12 @@ function ILvlCheck:AddGearTooltipLines(audit)
         GameTooltip:AddLine("Inspected by " .. audit.sharedBy .. " (Party iLvl Check)", 0.40, 0.80, 1.00)
     end
 
+    if audit.durability then
+        local d = audit.durability
+        GameTooltip:AddLine(("Durability: %d%%"):format(d),
+            d >= 50 and 0.30 or (d >= 20 and 1.00 or 0.90), d >= 50 and 0.85 or (d >= 20 and 0.65 or 0.20), d >= 50 and 0.35 or 0.20)
+    end
+
     if audit.tierPieces then
         local pieces = audit.tierPieces
         GameTooltip:AddLine(("Tier set: %d of 5 pieces"):format(pieces),

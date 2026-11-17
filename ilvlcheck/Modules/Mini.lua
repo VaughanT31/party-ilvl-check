@@ -158,12 +158,20 @@ local function Create()
     end)
 end
 
+-- Shown for group members whose shared durability is under 20%.
+local REPAIR_ICON = "Interface\\Minimap\\Tracking\\Repair"
+local LOW_DURABILITY = 20
+
 -- What's wrong with a player, as icon paths: missing buffs (not optional
--- ones), and the gear check when it found something.
+-- ones), the gear check when it found something, and low durability (shared
+-- by their Party iLvl Check; your own is in the header).
 local function Problems(addon, entry)
     local list = {}
     if not entry.ilvl then return list end
     local isSelf = entry.unit and UnitIsUnit(entry.unit, "player")
+    if not isSelf and entry.durability and entry.durability < LOW_DURABILITY then
+        list[#list + 1] = REPAIR_ICON
+    end
     for _, buffDef in ipairs(addon.visibleBuffs or {}) do
         local status = entry.buffStatus and entry.buffStatus[buffDef.key]
         local skip = buffDef.optional or (buffDef.selfOnly and not isSelf and not addon.testMode)

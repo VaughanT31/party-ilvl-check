@@ -73,6 +73,8 @@ end
 
 function ILvlCheck:READY_CHECK(initiator)
     self.readyCheck = { active = true, statuses = {} }
+    -- Fresh numbers for everyone's ready check window.
+    ns.Share:SendDurability()
     for _, unit in ipairs(GroupUnits()) do
         local status = GetReadyCheckStatus and GetReadyCheckStatus(unit)
         SetStatus(unit, READY_ICONS[status] and status or "waiting")

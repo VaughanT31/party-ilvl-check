@@ -185,6 +185,7 @@ function ILvlCheck:CHAT_MSG_ADDON(prefix, message, channel, sender)
 end
 
 function ILvlCheck:UPDATE_INVENTORY_DURABILITY()
+    ns.Share:DurabilityChanged()
     if self:IsDisplaying() then
         self:UpdateUI()
     end

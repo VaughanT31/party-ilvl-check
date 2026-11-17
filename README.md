@@ -29,7 +29,7 @@ Players who were out of range are checked again automatically once they come clo
 
 **Tier set and Post.** The gear icon's tooltip shows each player's tier set pieces. *Post* sends a short summary (item levels, best runs here, missing utility, keys) to party or instance chat, or prints it for you when you're alone or in Test Mode.
 
-**Sharing (1.5).** Group members who also run Party iLvl Check send their own item level, spec and gear check, and share anyone they inspect, so the window fills in much faster, especially in raids. Shared data is only used for people in your group and never replaces your own inspects; nothing is sent during encounters or Mythic+.
+**Sharing (1.5).** Group members who also run Party iLvl Check send their own item level, spec, gear check and durability (1.8: shown in the gear tooltip, with a repair icon on the ready check window under 20%), and share anyone they inspect, so the window fills in much faster, especially in raids. Shared data is only used for people in your group and never replaces your own inspects; nothing is sent during encounters or Mythic+.
 
 **Raid mode.** In a raid group the window shows everyone as compact rows in a scrolling list. It doesn't open by itself in raids; use `/ilvlcheck` or the minimap button. `/ilvlcheck testraid` shows a made-up raid.
 

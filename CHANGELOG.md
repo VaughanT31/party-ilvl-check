@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0
+
+- **Shared durability:** group members who run Party iLvl Check now send their durability, so you see theirs as well as your own. It shows in the gear check tooltip ("Durability: 87%"), and anyone under 20% gets a repair icon on the ready check window, so you can ask them to repair before the pull. It's sent on a ready check and when it changes by 10 points or drops under 50% or 20%. Players on older versions just don't show it.
+
 ## 1.7.1
 
 - **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.

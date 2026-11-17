@@ -12,6 +12,10 @@ local ILvlCheck = ns.ILvlCheck
 --      in a raid the group shares the inspecting instead of everyone
 --      inspecting all twenty.
 --   H  "hello": asks everyone with the addon to send their S.
+--   D  "my durability" (1.8): your average durability, sent with S, on a
+--      ready check, and when it changes enough to matter. Copies before 1.8
+--      don't know D and skip it (S can't grow: they'd drop the whole S).
+--      Only used from the player themselves.
 -- Every message names the player by GUID. A message is used only when that
 -- GUID belongs to someone in your group, and an S only when it comes from
 -- that player themselves (the server fills in who sent an addon message).
@@ -135,10 +139,23 @@ local function Labels(text)
     return labels
 end
 
+-- Durability: D|guid|percent
+function Share.EncodeDurability(guid, percent)
+    return ("D|%s|%d"):format(guid or "", percent or 0)
+end
+
 -- The message as a table, or nil when it isn't one of ours.
 function Share.Decode(message)
     if type(message) ~= "string" or #message > 255 then
         return nil
+    end
+    local dGuid, dPercent = message:match("^D|(Player%-[^|]+)|(%d+)$")
+    if dGuid then
+        local percent = tonumber(dPercent)
+        if not percent or percent > 100 then
+            return nil
+        end
+        return { kind = "D", guid = dGuid, durability = percent }
     end
     local kind, guid, ilvl, specID, tier, enchants, sockets =
         message:match("^([SRH])|?([^|]*)|?([^|]*)|?([^|]*)|?([^|]*)|?([^|]*)|?([^|]*)$")
@@ -199,11 +216,24 @@ function Share:Apply(data, sender)
     if not unit or UnitIsUnit(unit, "player") then
         return false
     end
-    if data.kind == "S" and not SameName(unit, sender) then
+    if (data.kind == "S" or data.kind == "D") and not SameName(unit, sender) then
         return false
     end
     local key = ILvlCheck:GetUnitKey(unit)
     local entry = key and ILvlCheck.players[key]
+    if data.kind == "D" then
+        -- Kept on the entry (and the gear check, for its tooltip) until they leave.
+        if not entry then
+            return false
+        end
+        entry.durability = data.durability
+        entry.hasAddon = true
+        if entry.gearAudit then
+            entry.gearAudit.durability = data.durability
+        end
+        ILvlCheck:UpdateUI()
+        return true
+    end
     if data.kind == "R" and entry and entry.status == "Ready" and not entry.via then
         return false
     end
@@ -236,13 +266,51 @@ function Share:Apply(data, sender)
     return true
 end
 
+-- Your own durability, when it has any gear that wears.
+local lastDurability
+function Share:SendDurability()
+    local percent = ns.AverageDurability and ns.AverageDurability()
+    if not percent then
+        return false
+    end
+    lastDurability = percent
+    return Send(Share.EncodeDurability(UnitGUID("player"), percent))
+end
+
 -- Your own data.
 function Share:SendSelf()
     local ilvl = ILvlCheck:GetPlayerItemLevel()
     if not ilvl then
         return false
     end
-    return Send(Share.Encode("S", UnitGUID("player"), ilvl, ILvlCheck:GetPlayerSpecID(), ILvlCheck:AuditGear("player")))
+    local sent = Send(Share.Encode("S", UnitGUID("player"), ilvl, ILvlCheck:GetPlayerSpecID(), ILvlCheck:AuditGear("player")))
+    self:SendDurability()
+    return sent
+end
+
+-- Durability changes a little with every hit and death, so only tell the
+-- group when it moved 10 points or crossed 50% or 20%, a moment after.
+local durabilityTimer
+local function Band(percent)
+    return percent < 20 and 0 or (percent < 50 and 1 or 2)
+end
+function Share:DurabilityChanged()
+    if not IsInGroup() then
+        return
+    end
+    if durabilityTimer then
+        durabilityTimer:Cancel()
+    end
+    durabilityTimer = C_Timer.NewTimer(5, function()
+        durabilityTimer = nil
+        local percent = ns.AverageDurability and ns.AverageDurability()
+        if not percent then
+            return
+        end
+        if not lastDurability or math.abs(percent - lastDurability) >= 10 or Band(percent) ~= Band(lastDurability) then
+            Share:SendDurability()
+        end
+    end)
 end
 
 -- An inspect you finished, for the others.
