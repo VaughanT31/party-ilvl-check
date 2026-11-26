@@ -164,20 +164,15 @@ function ILvlCheck:ADDON_LOADED(loadedAddonName)
         ILvlCheck:ToggleWindow()
     end
 
-    self:RegisterEvent("GROUP_ROSTER_UPDATE")
-    self:RegisterEvent("INSPECT_READY")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("CHALLENGE_MODE_START")
-    self:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-    self:RegisterEvent("READY_CHECK")
-    self:RegisterEvent("READY_CHECK_CONFIRM")
-    self:RegisterEvent("READY_CHECK_FINISHED")
-    self:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
-    self:RegisterEvent("START_PLAYER_COUNTDOWN")
-    self:RegisterEvent("CANCEL_PLAYER_COUNTDOWN")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("CHAT_MSG_ADDON")
-    self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+    -- pcall: an event this client doesn't have (Mythic+ ones on WoW Forever)
+    -- would otherwise stop the rest from registering.
+    for _, event in ipairs({ "GROUP_ROSTER_UPDATE", "INSPECT_READY", "PLAYER_ENTERING_WORLD",
+                             "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED", "READY_CHECK",
+                             "READY_CHECK_CONFIRM", "READY_CHECK_FINISHED", "UPDATE_INVENTORY_DURABILITY",
+                             "START_PLAYER_COUNTDOWN", "CANCEL_PLAYER_COUNTDOWN", "PLAYER_REGEN_DISABLED",
+                             "CHAT_MSG_ADDON", "PLAYER_EQUIPMENT_CHANGED" }) do
+        pcall(self.RegisterEvent, self, event)
+    end
 end
 
 function ILvlCheck:CHAT_MSG_ADDON(prefix, message, channel, sender)

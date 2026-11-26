@@ -19,6 +19,6 @@ Hover the gear icon to see how many tier set pieces each player wears.
 
 ---
 
-Previous: [Group utility and keys](Group-utility-and-keys.md) | [Wiki home](Home.md) | Next: [Raids and group finder](Raids-and-group-finder.md)
+Previous: [Group utility and keys](Group-utility-and-keys.md) | [Wiki home](Home.md) | Next: [WoW Forever](WoW-Forever.md)
 
 Didn't find your answer? Ask in the [CtrlShiftZed Discord](https://discord.gg/wz7fw6jM9Z).

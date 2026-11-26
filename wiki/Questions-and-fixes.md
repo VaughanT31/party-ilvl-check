@@ -26,6 +26,10 @@ The game doesn't share other players' weapon enchants, so only yours can be chec
 
 The utility bar works from class and spec. A talent choice can add or remove an ability, so treat it as a guide.
 
+**Does it work on WoW Forever?**
+
+Yes, from 1.9.0: the ready check window in dungeons and raids, with Forever's own buffs, enchants and group utility. Mythic+ scores and keys are hidden there, since Forever has no Mythic+. See [WoW Forever](WoW-Forever.md).
+
 **Reporting a bug.**
 
 Type `/console scriptErrors 1` (or use BugSack), then share the addon version, what you did and the error text on Discord.

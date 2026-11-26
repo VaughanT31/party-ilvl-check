@@ -5,7 +5,7 @@ local ILvlCheck = ns.ILvlCheck
 -- Core.lua, this list changes between expansions: update it each season from a
 -- current enchanting guide. Off-hand only counts when it's an actual weapon
 -- (not a shield or held-in-off-hand item), see IsWeapon below.
-local ENCHANT_SLOTS = {
+local ENCHANT_SLOTS_RETAIL = {
     { slot = 1, label = "Head" },
     { slot = 3, label = "Shoulder" },
     { slot = 5, label = "Chest" },
@@ -16,6 +16,21 @@ local ENCHANT_SLOTS = {
     { slot = 16, label = "Main Hand" },
     { slot = 17, label = "Off Hand", weaponOnly = true },
 }
+
+-- WoW Forever: the slots its enchanting covers (Enchant Necklace, Cloak,
+-- Chest, Bracer, Gloves, Boots, Weapon, 2H Weapon, Shield, Off-Hand). The
+-- off hand counts when it's a weapon or a shield.
+local ENCHANT_SLOTS_FOREVER = {
+    { slot = 2, label = "Neck" },
+    { slot = 15, label = "Back" },
+    { slot = 5, label = "Chest" },
+    { slot = 9, label = "Wrist" },
+    { slot = 10, label = "Hands" },
+    { slot = 8, label = "Feet" },
+    { slot = 16, label = "Main Hand" },
+    { slot = 17, label = "Off Hand", weaponOrShield = true },
+}
+local ENCHANT_SLOTS = ns.IS_FOREVER and ENCHANT_SLOTS_FOREVER or ENCHANT_SLOTS_RETAIL
 
 -- Every slot that can carry a socket, checked for empty ones.
 local SOCKET_SLOTS = {
@@ -91,6 +106,15 @@ local function IsWeapon(link)
     return classID == (Enum.ItemClass and Enum.ItemClass.Weapon or 2)
 end
 
+local function IsShield(link)
+    local getInfo = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    if not getInfo then
+        return false
+    end
+    local _, _, _, equipLoc = getInfo(link)
+    return equipLoc == "INVTYPE_SHIELD"
+end
+
 -- Returns { missingEnchants = { labels }, emptySockets = { labels } } for the
 -- unit's equipped gear, or nil when nothing is readable (inspect data gone).
 -- For other players this must run while their inspect data is still loaded,
@@ -107,7 +131,10 @@ function ILvlCheck:AuditGear(unit)
         local link = GetInventoryItemLink(unit, info.slot)
         if link then
             anyItem = true
-            if not info.weaponOnly or IsWeapon(link) then
+            local counts = true
+            if info.weaponOnly then counts = IsWeapon(link) end
+            if info.weaponOrShield then counts = IsWeapon(link) or IsShield(link) end
+            if counts then
                 local enchant = ParseLink(link)
                 if enchant == 0 then
                     audit.missingEnchants[#audit.missingEnchants + 1] = info.label

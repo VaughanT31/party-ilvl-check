@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.0
+
+- **WoW Forever:** the ready check window now works on WoW Forever, ready for its raids. It checks Forever's own buffs (Mark of the Wild, Power Word: Fortitude, Arcane Intellect, Battle Shout and the paladin Blessings, raid-wide versions included), Well Fed, a flask or elixir and your weapon oil or stone, and flags missing enchants on the neck, back, chest, wrists, hands, feet and weapons (a shield too). The group bar shows interrupts, dispels, battle res and Bloodlust from Forever's classes. Mythic+ scores and keys are hidden there. Raid mode works for 10, 20 and 40 players.
+- Ready for patch 12.1.7.
+
 ## 1.8.0
 
 - **Shared durability:** group members who run Party iLvl Check now send their durability, so you see theirs as well as your own. It shows in the gear check tooltip ("Durability: 87%"), and anyone under 20% gets a repair icon on the ready check window, so you can ask them to repair before the pull. It's sent on a ready check and when it changes by 10 points or drops under 50% or 20%. Players on older versions just don't show it.

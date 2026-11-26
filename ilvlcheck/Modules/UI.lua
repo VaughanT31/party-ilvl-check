@@ -525,7 +525,11 @@ function ILvlCheck:UpdateUI()
                 row.accent:Show()
                 row.accent:SetVertexColor(nr, ng, nb, 0.9)
 
-                if entry.mythicRating then
+                if ns.IS_FOREVER then
+                    -- No Mythic+ on WoW Forever.
+                    row.scoreText:SetText("")
+                    row.scoreText:Hide()
+                elseif entry.mythicRating then
                     local scoreColor = C_ChallengeMode and C_ChallengeMode.GetDungeonScoreRarityColor and C_ChallengeMode.GetDungeonScoreRarityColor(entry.mythicRating)
                     if scoreColor then
                         row.scoreText:SetTextColor(scoreColor.r, scoreColor.g, scoreColor.b)
@@ -764,6 +768,8 @@ function ILvlCheck:UpdateUtilityBar()
         holder.count:SetText(holder.def.want and slot and slot.count > 0 and tostring(slot.count) or "")
     end
 
+    bar.keys:SetShown(not ns.IS_FOREVER)
+    if ns.IS_FOREVER then return end
     local list = self:ListKeystones()
     bar.keys.text:SetText(#list == 0 and "|cff8c8c94No keys|r" or (#list == 1 and "1 key" or (#list .. " keys")) .. (list[1] and ("  |cffffd100+" .. list[1].level .. "|r") or ""))
 end

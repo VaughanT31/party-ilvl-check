@@ -47,6 +47,31 @@ ns.UTILITY_DEFINITIONS = {
       classes = { SHAMAN = true, MAGE = true, HUNTER = true, EVOKER = true } },
 }
 
+-- WoW Forever: the nine Classic classes, checked against its spell list
+-- (Kick, Pummel, Counterspell, Earth Shock, Rebuke, Skull Bash and the
+-- Felhunter's Spell Lock; Dispel Magic, Cleanse and Devour Magic; Remove
+-- Curse; Cure or Abolish Poison and Disease; Rebirth and Soulstone;
+-- Bloodlust). Its specs aren't Retail's, so the class alone decides.
+if ns.IS_FOREVER then
+    ns.UTILITY_DEFINITIONS = {
+        { key = "INTERRUPT", label = "Interrupts", icon = "ability_kick", want = 2,
+          note = "Two or more is comfortable for most pulls.",
+          classes = { ROGUE = true, WARRIOR = true, MAGE = true, SHAMAN = true, PALADIN = true, DRUID = true, WARLOCK = true } },
+        { key = "MAGIC", label = "Magic dispel", icon = "spell_holy_dispelmagic",
+          classes = { PRIEST = true, PALADIN = true, WARLOCK = true } },
+        { key = "CURSE", label = "Curse dispel", icon = "spell_nature_removecurse",
+          classes = { MAGE = true, DRUID = true } },
+        { key = "POISON", label = "Poison dispel", icon = "spell_nature_nullifypoison",
+          classes = { DRUID = true, PALADIN = true, SHAMAN = true } },
+        { key = "DISEASE", label = "Disease dispel", icon = "spell_holy_nullifydisease",
+          classes = { PRIEST = true, PALADIN = true, SHAMAN = true } },
+        { key = "BREZ", label = "Battle res", icon = "spell_nature_reincarnation",
+          classes = { DRUID = true, WARLOCK = true } },
+        { key = "LUST", label = "Bloodlust", icon = "spell_nature_bloodlust",
+          classes = { SHAMAN = true } },
+    }
+end
+
 for _, def in ipairs(ns.UTILITY_DEFINITIONS) do
     def.iconPath = "Interface\\Icons\\" .. def.icon
 end

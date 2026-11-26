@@ -1,8 +1,8 @@
-## Interface: 120105
+## Interface: 120105, 120107, 16001
 ## Title: Party iLvl Check
-## Notes: Opens on a ready check with everyone's ready status, item level, buffs and gear, staying hidden during active Mythic+ timers.
+## Notes: Opens on a ready check with everyone's ready status, item level, buffs and gear, in dungeons and raids, on Retail and WoW Forever.
 ## Author: CtrlShiftZed
-## Version: 1.8.0
+## Version: 1.9.0
 ## X-Curse-Project-ID: 1527067
 ## Category: CtrlShift_Zed
 ## IconTexture: Interface\AddOns\ilvlcheck\icon

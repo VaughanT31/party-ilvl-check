@@ -16,6 +16,6 @@ When you list a Mythic+ key, each applicant's row shows their **best run in your
 
 ---
 
-Previous: [Buffs and gear checks](Buffs-and-gear-checks.md) | [Wiki home](Home.md) | Next: [Sharing with friends](Sharing-with-friends.md)
+Previous: [WoW Forever](WoW-Forever.md) | [Wiki home](Home.md) | Next: [Sharing with friends](Sharing-with-friends.md)
 
 Didn't find your answer? Ask in the [CtrlShiftZed Discord](https://discord.gg/wz7fw6jM9Z).

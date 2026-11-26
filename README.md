@@ -4,8 +4,8 @@ A World of Warcraft addon that shows your party's item levels, Mythic+ scores, b
 
 **New here?** The [wiki](wiki/Home.md) explains every feature step by step (also on the [website](https://ctrlshiftzed.com/wiki/party-ilvl-check/)). Questions it doesn't answer: ask on [Discord](https://discord.gg/wz7fw6jM9Z).
 
-- **Game:** Retail, Midnight (12.x)
-- **Interface:** `120100`
+- **Game:** Retail, Midnight (12.x), and WoW Forever
+- **Interface:** `120105, 120107, 16001`
 - **CurseForge:** [Party iLvl Check](https://www.curseforge.com/wow/addons/party-item-level-checker)
 
 ## What it does
@@ -46,6 +46,8 @@ Players who were out of range are checked again automatically once they come clo
 | Flask | Midnight flasks |
 | Weapon Oil | Oils and whetstones on your weapon. Only shown for you, because the game doesn't share other players' weapon enchants |
 | Enchants & Gems | Missing enchants and empty sockets on everyone's gear. Hover it to see which slots |
+
+**WoW Forever.** The same window opens on a ready check, in dungeons and in 10, 20 and 40 player raids, with Forever's own checks: Mark of the Wild, Power Word: Fortitude, Arcane Intellect, Battle Shout and the paladin Blessings (the raid-wide versions count too), Well Fed, a flask or elixir, weapon oil or stone, and enchants on the neck, back, chest, wrists, hands, feet and weapons (a shield too). The group bar shows interrupts, dispels, battle res and Bloodlust from Forever's classes. There's no Mythic+ there, so scores and keys are hidden.
 
 **Minimum item level.** Type a number into *Min iLvl* and anyone under it gets flagged with a raid warning and a sound. The summary tiles at the top count who is ready, who is below your minimum and who is offline.
 

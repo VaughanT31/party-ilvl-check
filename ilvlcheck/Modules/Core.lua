@@ -48,6 +48,11 @@ ns.BUFF_ICON_GAP = 4
 ns.BUFF_ICON_SIZE = 22
 ns.BUFF_RING_PADDING = 2
 
+-- WoW Forever (1.9.0): the only other game version this addon loads on.
+-- Its classes, buffs, consumables and enchants are Classic style, so it gets
+-- its own lists below (ns.FOREVER_BUFF_DEFINITIONS) and no Mythic+ parts.
+ns.IS_FOREVER = WOW_PROJECT_ID ~= nil and WOW_PROJECT_MAINLINE ~= nil and WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE
+
 -- Class raid buffs use spell IDs (stable across patches). Consumable rows
 -- (food/flask) match by buff NAME instead, since those items rotate every
 -- season. Update the `names` lists in-game each season by right-clicking
@@ -108,6 +113,32 @@ ns.BUFF_DEFINITIONS = {
     -- empty sockets), shown in the same strip so it reads like the buffs.
     { key = "GEAR", label = "Enchants & Gems", kind = "gear", icon = "trade_engraving" },
 }
+
+-- WoW Forever's raid buffs and consumables, from its game data (build
+-- 1.60.1.71139). Matched by name, since each buff has many ranks: the
+-- raid-wide version counts too (Gift of the Wild, Prayer of Fortitude,
+-- Arcane Brilliance, the Greater Blessings). Flask or elixir is one row,
+-- because raiders use either.
+ns.FOREVER_BUFF_DEFINITIONS = {
+    { key = "MOTW", label = "Mark of the Wild", kind = "class", providerClass = "DRUID",
+      names = { "Mark of the Wild", "Gift of the Wild" }, icon = "spell_nature_regeneration" },
+    { key = "FORTITUDE", label = "Power Word: Fortitude", kind = "class", providerClass = "PRIEST",
+      names = { "Power Word: Fortitude", "Prayer of Fortitude" }, icon = "spell_holy_wordfortitude" },
+    { key = "ARCANE_INTELLECT", label = "Arcane Intellect", kind = "class", providerClass = "MAGE",
+      names = { "Arcane Intellect", "Arcane Brilliance" }, icon = "spell_holy_magicalsentry" },
+    { key = "BATTLE_SHOUT", label = "Battle Shout", kind = "class", providerClass = "WARRIOR",
+      names = { "Battle Shout" }, icon = "ability_warrior_battleshout" },
+    { key = "BLESSING", label = "Paladin Blessing", kind = "class", providerClass = "PALADIN",
+      patterns = { "^blessing of ", "^greater blessing of " }, icon = "spell_holy_fistofjustice" },
+    { key = "FOOD", label = "Well Fed", kind = "consumable", icon = "spell_misc_food",
+      patterns = { "well fed" } },
+    { key = "FLASK", label = "Flask or Elixir", kind = "consumable", icon = "inv_potion_62",
+      patterns = { "^flask of ", "^elixir of ", "^greater flask of ", "^major flask of " } },
+    { key = "WEAPON_OIL", label = "Weapon Oil or Stone", kind = "weapon", icon = "inv_stone_02",
+      selfOnly = true },
+    { key = "GEAR", label = "Enchants", kind = "gear", icon = "trade_engraving" },
+}
+if ns.IS_FOREVER then ns.BUFF_DEFINITIONS = ns.FOREVER_BUFF_DEFINITIONS end
 
 for _, buffDef in ipairs(ns.BUFF_DEFINITIONS) do
     buffDef.iconPath = "Interface\\Icons\\" .. buffDef.icon
